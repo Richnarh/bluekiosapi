@@ -1,0 +1,13 @@
+import express from 'express';
+import { AuthController } from '@/controllers/authController';
+import { authMiddleware } from '@/middleware/authMiddleware';
+
+const router = express.Router();
+const authController = new AuthController();
+
+router.post('/', authController.loginUser.bind(authController));
+router.post('/logout', authMiddleware, authController.logoutUser.bind(authController));
+router.post('/refresh', authController.refreshToken.bind(authController));
+router.post('/verify', authController.verifyOtp.bind(authController));
+
+export default router;

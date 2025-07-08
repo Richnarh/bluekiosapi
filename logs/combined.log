@@ -1,0 +1,141 @@
+{"level":"info","message":"Server is running at http://localhost:3000","timestamp":"2025-07-08T12:58:45.381Z"}
+{"level":"info","message":"Server is running at http://localhost:3000","timestamp":"2025-07-08T13:01:00.907Z"}
+{"level":"info","message":"Server is running at http://localhost:3000","timestamp":"2025-07-08T13:01:10.416Z"}
+{"level":"info","message":"POST /api/v1/users","timestamp":"2025-07-08T13:03:06.943Z"}
+{"error":{"clientVersion":"6.11.1","code":"P2022","meta":{"column":"address","modelName":"User"},"name":"PrismaClientKnownRequestError"},"level":"error","message":"Failed to create record","timestamp":"2025-07-08T13:03:07.103Z"}
+{"level":"error","message":"Operational error Failed to create record","path":"/api/v1/users","statusCode":500,"timestamp":"2025-07-08T13:03:07.103Z"}
+{"level":"info","message":"Server is running at http://localhost:3000","timestamp":"2025-07-08T13:05:13.486Z"}
+{"level":"info","message":"POST /api/v1/users","timestamp":"2025-07-08T13:05:18.592Z"}
+{"level":"info","message":{"address":"Tema com25","companyName":"Rich Fashion","emailAddress":"pascalcppjava@gmail.com","fullName":"Richard Narh","password":"app13@Go","phoneNumber":"0574417585"},"timestamp":"2025-07-08T13:05:18.593Z"}
+{"error":{"clientVersion":"6.11.1","code":"P2022","meta":{"column":"address","modelName":"User"},"name":"PrismaClientKnownRequestError"},"level":"error","message":"Failed to create record","timestamp":"2025-07-08T13:05:18.738Z"}
+{"level":"error","message":"Operational error Failed to create record","path":"/api/v1/users","statusCode":500,"timestamp":"2025-07-08T13:05:18.739Z"}
+{"level":"info","message":"Server is running at http://localhost:3000","timestamp":"2025-07-08T13:06:51.627Z"}
+{"level":"info","message":"Server is running at http://localhost:3000","timestamp":"2025-07-08T13:07:35.250Z"}
+{"level":"info","message":"Server is running at http://localhost:3000","timestamp":"2025-07-08T13:07:38.938Z"}
+{"level":"info","message":"POST /api/v1/users","timestamp":"2025-07-08T13:07:46.208Z"}
+{"error":{"clientVersion":"6.11.1","code":"P2022","meta":{"column":"address","modelName":"User"},"name":"PrismaClientKnownRequestError"},"level":"error","message":"Failed to create record","timestamp":"2025-07-08T13:07:46.359Z"}
+{"level":"error","message":"Operational error Failed to create record","path":"/api/v1/users","statusCode":500,"timestamp":"2025-07-08T13:07:46.360Z"}
+{"level":"info","message":"Server is running at http://localhost:3000","timestamp":"2025-07-08T13:09:16.125Z"}
+{"level":"info","message":"POST /api/v1/users","timestamp":"2025-07-08T13:09:22.519Z"}
+{"error":{"clientVersion":"6.11.1","code":"P2022","meta":{"column":"address","modelName":"User"},"name":"PrismaClientKnownRequestError"},"level":"error","message":"Failed to create record","timestamp":"2025-07-08T13:09:22.661Z"}
+{"level":"error","message":"Operational error Failed to create record","path":"/api/v1/users","statusCode":500,"timestamp":"2025-07-08T13:09:22.661Z"}
+{"level":"info","message":"Server is running at http://localhost:3000","timestamp":"2025-07-08T13:09:57.521Z"}
+{"level":"info","message":"POST /api/v1/users","timestamp":"2025-07-08T13:10:00.598Z"}
+{"error":{"clientVersion":"6.11.1","code":"P2022","meta":{"column":"address","modelName":"User"},"name":"PrismaClientKnownRequestError"},"level":"error","message":"Failed to create record","timestamp":"2025-07-08T13:10:00.716Z"}
+{"level":"error","message":"Operational error Failed to create record","path":"/api/v1/users","statusCode":500,"timestamp":"2025-07-08T13:10:00.717Z"}
+{"level":"info","message":"Server is running at http://localhost:3000","timestamp":"2025-07-08T13:10:28.320Z"}
+{"level":"info","message":"POST /api/v1/users","timestamp":"2025-07-08T13:11:57.965Z"}
+{"error":{"clientVersion":"6.11.1","code":"P2022","meta":{"column":"address","modelName":"User"},"name":"PrismaClientKnownRequestError"},"level":"error","message":"Failed to create record","timestamp":"2025-07-08T13:11:58.076Z"}
+{"level":"error","message":"Operational error Failed to create record","path":"/api/v1/users","statusCode":500,"timestamp":"2025-07-08T13:11:58.076Z"}
+{"level":"info","message":"Server is running at http://localhost:3000","timestamp":"2025-07-08T13:13:20.011Z"}
+{"level":"info","message":"POST /api/v1/users","timestamp":"2025-07-08T13:13:35.368Z"}
+{"error":{"clientVersion":"6.11.1","code":"P2022","meta":{"column":"address","modelName":"User"},"name":"PrismaClientKnownRequestError"},"level":"error","message":"Failed to create record","timestamp":"2025-07-08T13:13:35.468Z"}
+{"level":"error","message":"Operational error Failed to create record","path":"/api/v1/users","statusCode":500,"timestamp":"2025-07-08T13:13:35.469Z"}
+{"level":"info","message":"Server is running at http://localhost:3000","timestamp":"2025-07-08T13:14:40.727Z"}
+{"level":"info","message":"Server is running at http://localhost:3000","timestamp":"2025-07-08T13:14:47.545Z"}
+{"level":"info","message":"Server is running at http://localhost:3000","timestamp":"2025-07-08T13:17:16.177Z"}
+{"level":"info","message":"Server is running at http://localhost:3000","timestamp":"2025-07-08T13:17:19.297Z"}
+{"level":"info","message":"POST /api/v1/users","timestamp":"2025-07-08T13:17:37.969Z"}
+{"error":{"clientVersion":"6.11.1","code":"P2022","meta":{"column":"address","modelName":"User"},"name":"PrismaClientKnownRequestError"},"level":"error","message":"Failed to create record","timestamp":"2025-07-08T13:17:38.103Z"}
+{"level":"error","message":"Operational error Failed to create record","path":"/api/v1/users","statusCode":500,"timestamp":"2025-07-08T13:17:38.103Z"}
+{"level":"info","message":"Server is running at http://localhost:3000","timestamp":"2025-07-08T13:34:25.617Z"}
+{"level":"info","message":"POST /api/v1/users","timestamp":"2025-07-08T13:34:31.151Z"}
+{"error":{"clientVersion":"6.11.1","code":"P2022","meta":{"column":"address","modelName":"User"},"name":"PrismaClientKnownRequestError"},"level":"error","message":"Failed to create record","timestamp":"2025-07-08T13:34:31.294Z"}
+{"level":"error","message":"Operational error Failed to create record","path":"/api/v1/users","statusCode":500,"timestamp":"2025-07-08T13:34:31.295Z"}
+{"level":"info","message":"Server is running at http://localhost:3000","timestamp":"2025-07-08T13:34:43.876Z"}
+{"level":"info","message":"Server is running at http://localhost:3000","timestamp":"2025-07-08T13:35:53.578Z"}
+{"level":"info","message":"Server is running at http://localhost:3000","timestamp":"2025-07-08T13:36:01.455Z"}
+{"level":"info","message":"POST /api/v1/users","timestamp":"2025-07-08T13:36:06.699Z"}
+{"error":{"clientVersion":"6.11.1","code":"P2022","meta":{"column":"address","modelName":"User"},"name":"PrismaClientKnownRequestError"},"level":"error","message":"Failed to create record","timestamp":"2025-07-08T13:36:06.821Z"}
+{"level":"error","message":"Operational error Failed to create record","path":"/api/v1/users","statusCode":500,"timestamp":"2025-07-08T13:36:06.821Z"}
+{"level":"info","message":"Server is running at http://localhost:3000","timestamp":"2025-07-08T13:37:10.889Z"}
+{"level":"info","message":"POST /api/v1/users","timestamp":"2025-07-08T13:37:16.385Z"}
+{"error":{"clientVersion":"6.11.1","code":"P2022","meta":{"column":"address","modelName":"User"},"name":"PrismaClientKnownRequestError"},"level":"error","message":"Failed to create record","timestamp":"2025-07-08T13:37:16.493Z"}
+{"level":"error","message":"Operational error Failed to create record","path":"/api/v1/users","statusCode":500,"timestamp":"2025-07-08T13:37:16.494Z"}
+{"level":"info","message":"Server is running at http://localhost:4000","timestamp":"2025-07-08T13:39:20.025Z"}
+{"level":"info","message":"POST /api/v1/users","timestamp":"2025-07-08T13:39:32.136Z"}
+{"error":{"clientVersion":"6.11.1","code":"P2022","meta":{"column":"address","modelName":"User"},"name":"PrismaClientKnownRequestError"},"level":"error","message":"Failed to create record","timestamp":"2025-07-08T13:39:32.267Z"}
+{"level":"error","message":"Operational error Failed to create record","path":"/api/v1/users","statusCode":500,"timestamp":"2025-07-08T13:39:32.267Z"}
+{"level":"info","message":"Server is running at http://localhost:4000","timestamp":"2025-07-08T13:46:15.328Z"}
+{"level":"info","message":"Server is running at http://localhost:4000","timestamp":"2025-07-08T13:46:45.401Z"}
+{"level":"info","message":"Server is running at http://localhost:4000","timestamp":"2025-07-08T13:46:55.145Z"}
+{"level":"info","message":"POST /api/v1/users","timestamp":"2025-07-08T13:48:23.861Z"}
+{"error":{"clientVersion":"6.11.1","code":"P2022","meta":{"column":"address","modelName":"User"},"name":"PrismaClientKnownRequestError"},"level":"error","message":"Failed to create record","timestamp":"2025-07-08T13:48:23.955Z"}
+{"level":"error","message":"Operational error Failed to create record","path":"/api/v1/users","statusCode":500,"timestamp":"2025-07-08T13:48:23.956Z"}
+{"level":"info","message":"Server is running at http://localhost:4000","timestamp":"2025-07-08T13:48:40.845Z"}
+{"level":"info","message":"POST /api/v1/users","timestamp":"2025-07-08T13:49:45.338Z"}
+{"error":{"clientVersion":"6.11.1","code":"P2022","meta":{"column":"address","modelName":"User"},"name":"PrismaClientKnownRequestError"},"level":"error","message":"Failed to create record","timestamp":"2025-07-08T13:49:45.372Z"}
+{"level":"error","message":"Operational error Failed to create record","path":"/api/v1/users","statusCode":500,"timestamp":"2025-07-08T13:49:45.373Z"}
+{"level":"info","message":"Server is running at http://localhost:4000","timestamp":"2025-07-08T13:51:30.759Z"}
+{"level":"info","message":"POST /api/v1/users","timestamp":"2025-07-08T13:51:33.844Z"}
+{"error":{"clientVersion":"6.11.1","code":"P2022","meta":{"column":"address","modelName":"User"},"name":"PrismaClientKnownRequestError"},"level":"error","message":"Failed to create record","timestamp":"2025-07-08T13:51:33.884Z"}
+{"level":"info","message":"Server is running at http://localhost:4000","timestamp":"2025-07-08T13:51:57.151Z"}
+{"level":"info","message":"Server is running at http://localhost:4000","timestamp":"2025-07-08T13:52:40.368Z"}
+{"level":"info","message":"Server is running at http://localhost:4000","timestamp":"2025-07-08T13:52:45.271Z"}
+{"level":"info","message":"POST /api/v1/users","timestamp":"2025-07-08T13:52:49.756Z"}
+{"level":"info","message":"Server is running at http://localhost:4000","timestamp":"2025-07-08T13:53:18.926Z"}
+{"level":"info","message":"POST /api/v1/users","timestamp":"2025-07-08T13:53:22.561Z"}
+{"level":"info","message":"POST /api/v1/users","timestamp":"2025-07-08T13:53:24.255Z"}
+{"level":"info","message":"Server is running at http://localhost:4000","timestamp":"2025-07-08T13:53:35.469Z"}
+{"level":"info","message":"POST /api/v1/users","timestamp":"2025-07-08T13:53:38.129Z"}
+{"level":"info","message":"Server is running at http://localhost:4000","timestamp":"2025-07-08T13:53:46.127Z"}
+{"level":"info","message":"POST /api/v1/users","timestamp":"2025-07-08T13:53:48.099Z"}
+{"level":"info","message":"POST /api/v1/users","timestamp":"2025-07-08T13:53:49.155Z"}
+{"level":"info","message":"Server is running at http://localhost:4000","timestamp":"2025-07-08T13:53:53.690Z"}
+{"level":"info","message":"POST /api/v1/users","timestamp":"2025-07-08T13:54:22.483Z"}
+{"error":{"clientVersion":"6.11.1","code":"P2022","meta":{"column":"address","modelName":"User"},"name":"PrismaClientKnownRequestError"},"level":"error","message":"Failed to create record","timestamp":"2025-07-08T13:54:22.557Z"}
+{"level":"info","message":"Server is running at http://localhost:4000","timestamp":"2025-07-08T13:54:33.622Z"}
+{"level":"info","message":"Server is running at http://localhost:4000","timestamp":"2025-07-08T13:55:00.009Z"}
+{"level":"info","message":"POST /api/v1/users","timestamp":"2025-07-08T13:55:16.096Z"}
+{"error":{"clientVersion":"6.11.1","code":"P2022","meta":{"column":"address","modelName":"User"},"name":"PrismaClientKnownRequestError"},"level":"error","message":"Failed to create record","timestamp":"2025-07-08T13:55:16.164Z"}
+{"level":"info","message":"Server is running at http://localhost:4000","timestamp":"2025-07-08T13:55:26.566Z"}
+{"level":"info","message":"POST /api/v1/users","timestamp":"2025-07-08T13:55:29.187Z"}
+{"error":{"clientVersion":"6.11.1","code":"P2022","meta":{"column":"address","modelName":"User"},"name":"PrismaClientKnownRequestError"},"level":"error","message":"Failed to create record","timestamp":"2025-07-08T13:55:29.231Z"}
+{"level":"error","message":"Operational error Failed to create record","path":"/api/v1/users","statusCode":500,"timestamp":"2025-07-08T13:55:29.232Z"}
+{"level":"info","message":"Server is running at http://localhost:4000","timestamp":"2025-07-08T13:55:59.563Z"}
+{"level":"info","message":"POST /api/v1/users","timestamp":"2025-07-08T13:56:03.081Z"}
+{"level":"info","message":"Record created successfully","timestamp":"2025-07-08T13:56:03.089Z"}
+{"level":"info","message":"POST /api/v1/users","timestamp":"2025-07-08T13:56:06.690Z"}
+{"level":"info","message":"Record created successfully","timestamp":"2025-07-08T13:56:06.693Z"}
+{"level":"info","message":"Server is running at http://localhost:4000","timestamp":"2025-07-08T13:56:39.106Z"}
+{"level":"info","message":"POST /api/v1/users","timestamp":"2025-07-08T13:56:46.105Z"}
+{"error":{"clientVersion":"6.11.1","code":"P2022","meta":{"column":"address","modelName":"User"},"name":"PrismaClientKnownRequestError"},"level":"error","message":"Failed to create record","timestamp":"2025-07-08T13:56:46.144Z"}
+{"level":"error","message":"Operational error Failed to create record","path":"/api/v1/users","statusCode":500,"timestamp":"2025-07-08T13:56:46.145Z"}
+{"level":"info","message":"POST /api/v1/users","timestamp":"2025-07-08T13:58:40.568Z"}
+{"error":{"clientVersion":"6.11.1","code":"P2022","meta":{"column":"address","modelName":"User"},"name":"PrismaClientKnownRequestError"},"level":"error","message":"Failed to create record","timestamp":"2025-07-08T13:58:40.603Z"}
+{"level":"error","message":"Operational error Failed to create record","path":"/api/v1/users","statusCode":500,"timestamp":"2025-07-08T13:58:40.603Z"}
+{"level":"info","message":"Server is running at http://localhost:4000","timestamp":"2025-07-08T14:06:18.385Z"}
+{"level":"info","message":"POST /api/v1/users","timestamp":"2025-07-08T14:06:23.046Z"}
+{"id":"01JZN5QVVJKMPWPVG4M3QBE84D","level":"info","message":"Record created successfully","timestamp":"2025-07-08T14:06:23.095Z"}
+{"level":"info","message":"Server is running at http://localhost:4000","timestamp":"2025-07-08T14:06:55.689Z"}
+{"level":"info","message":"Server is running at http://localhost:4000","timestamp":"2025-07-08T14:08:02.223Z"}
+{"level":"info","message":"POST /api/v1/users","timestamp":"2025-07-08T14:08:23.542Z"}
+{"id":"01JZN5VHKTG521W4HTJ34VA07G","level":"info","message":"Record created successfully","timestamp":"2025-07-08T14:08:23.686Z"}
+{"id":"01JZN5VHM7ZK85VCQH8BX23A6F","level":"info","message":"Record created successfully","timestamp":"2025-07-08T14:08:23.694Z"}
+{"level":"info","message":"OTP created successfully","otpId":"01JZN5VHM7ZK85VCQH8BX23A6F","timestamp":"2025-07-08T14:08:23.694Z","userId":"01JZN5VHKTG521W4HTJ34VA07G"}
+{"level":"info","message":"OTP email sent successfully","timestamp":"2025-07-08T14:08:26.463Z","to":"pascalcppjava@gmail.com"}
+{"level":"info","message":"POST /api/v1/auth/verify-otp/","timestamp":"2025-07-08T14:33:57.865Z"}
+{"level":"warn","message":"Invalid or expired OTP","timestamp":"2025-07-08T14:33:57.935Z","userId":"01JZN5VHKTG521W4HTJ34VA07G"}
+{"level":"error","message":"Operational error Invalid or expired OTP","path":"/api/v1/auth/verify-otp/","statusCode":400,"timestamp":"2025-07-08T14:33:57.936Z"}
+{"level":"info","message":"POST /api/v1/users","timestamp":"2025-07-08T14:35:19.669Z"}
+{"id":"01JZN7CVTTCF0YY7K1R4T573BA","level":"info","message":"Record created successfully","timestamp":"2025-07-08T14:35:19.775Z"}
+{"id":"01JZN7CVV06EHJ5DE8746FMDK5","level":"info","message":"Record created successfully","timestamp":"2025-07-08T14:35:19.777Z"}
+{"level":"info","message":"OTP created successfully","otpId":"01JZN7CVV06EHJ5DE8746FMDK5","timestamp":"2025-07-08T14:35:19.778Z","userId":"01JZN7CVTTCF0YY7K1R4T573BA"}
+{"level":"info","message":"OTP email sent successfully","timestamp":"2025-07-08T14:35:27.265Z","to":"pascalcppjava@gmail.com"}
+{"level":"info","message":"POST /api/v1/auth/verify-otp/","timestamp":"2025-07-08T14:35:53.904Z"}
+{"level":"info","message":"OTP verified successfully","otpId":"01JZN7CVV06EHJ5DE8746FMDK5","timestamp":"2025-07-08T14:35:53.919Z","userId":"01JZN7CVTTCF0YY7K1R4T573BA"}
+{"id":"01JZN7CVTTCF0YY7K1R4T573BA","level":"info","message":"Record updated successfully","timestamp":"2025-07-08T14:35:53.927Z"}
+{"id":"01JZN7CVTTCF0YY7K1R4T573BA","level":"info","message":"User verified successfully","timestamp":"2025-07-08T14:35:53.928Z"}
+{"code":"922637","level":"info","message":"OTP deleted successfully","timestamp":"2025-07-08T14:35:53.929Z"}
+{"level":"info","message":"GET /api/v1/auth/login","timestamp":"2025-07-08T14:37:10.964Z"}
+{"level":"info","message":"Server is running at http://localhost:4000","timestamp":"2025-07-08T14:37:31.247Z"}
+{"level":"info","message":"GET /api/v1/auth","timestamp":"2025-07-08T14:37:52.562Z"}
+{"level":"info","message":"POST /api/v1/auth","timestamp":"2025-07-08T14:38:00.729Z"}
+{"id":"01JZN7HS8KCAJDMVMH5BRNFDAX","level":"info","message":"Record created successfully","timestamp":"2025-07-08T14:38:01.001Z"}
+{"level":"info","message":"Refresh token created successfully","timestamp":"2025-07-08T14:38:01.001Z","tokenId":"01JZN7HS8KCAJDMVMH5BRNFDAX","userId":"01JZN7CVTTCF0YY7K1R4T573BA"}
+{"level":"info","message":"User logged in successfully","timestamp":"2025-07-08T14:38:01.001Z","userId":"01JZN7CVTTCF0YY7K1R4T573BA"}
+{"level":"info","message":"Server is running at http://localhost:4000","timestamp":"2025-07-08T15:11:23.845Z"}
+{"level":"info","message":"Server is running at http://localhost:4000","timestamp":"2025-07-08T15:12:05.629Z"}
+{"level":"info","message":"Server is running at http://localhost:4000","timestamp":"2025-07-08T15:15:38.413Z"}
+{"level":"info","message":"Server is running at http://localhost:4000","timestamp":"2025-07-08T15:15:40.001Z"}
+{"level":"info","message":"Server is running at http://localhost:4000","timestamp":"2025-07-08T15:19:21.499Z"}
