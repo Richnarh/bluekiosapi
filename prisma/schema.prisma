@@ -32,6 +32,11 @@ enum Region {
   WESTERN_NORTH
 }
 
+enum MeasureType {
+  DEFAULT_TYPE
+  CUSTOM
+}
+
 model User {
   id           String  @id @default(ulid()) @db.VarChar(255)
   phoneNumber  String  @unique @map("phone_number") @db.VarChar(100)
@@ -151,10 +156,12 @@ model DressCollection {
 }
 
 model MaleMeasurement {
-  id     String @id @default(ulid()) @db.VarChar(255)
-  name   String @db.VarChar(255)
-  value  Int    @db.Integer
-  userId String @map("user_id") @db.VarChar(255)
+  id          String      @id @default(ulid()) @db.VarChar(255)
+  name        String      @db.VarChar(255)
+  value       Int         @db.Integer
+  userId      String      @map("user_id") @db.VarChar(255)
+  status      Boolean     @default(false) @map("status")
+  measureType MeasureType @default(DEFAULT_TYPE) @map("measure_type")
 
   customerDetails CustomerDetails[]
 
@@ -167,12 +174,14 @@ model MaleMeasurement {
 }
 
 model FemaleMeasurement {
-  id        String   @id @default(ulid()) @db.VarChar(255)
-  name      String   @db.VarChar(255)
-  value     Int      @db.Integer
-  userId    String   @map("user_id") @db.VarChar(255)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @default(now()) @map("updated_at")
+  id          String      @id @default(ulid()) @db.VarChar(255)
+  name        String      @db.VarChar(255)
+  value       Int         @db.Integer
+  userId      String      @map("user_id") @db.VarChar(255)
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @default(now()) @map("updated_at")
+  status      Boolean     @default(false) @map("status")
+  measureType MeasureType @default(DEFAULT_TYPE) @map("measure_type")
 
   user User @relation(fields: [userId], references: [id])
 
