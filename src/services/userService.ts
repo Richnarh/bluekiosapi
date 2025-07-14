@@ -33,20 +33,21 @@ export class UserService{
             .map(err => Object.values(err.constraints || {}).join(', '))
             .join('; ');
             logger.warn('Validation failed for create:user', { errors: errorMessages });
-            throw new AppError(`Validation failed: ${errorMessages}`, HttpStatus.BAD_REQUEST);
+            throw new AppError(`${errorMessages}`, HttpStatus.BAD_REQUEST);
         }
         const hashPassword = await bcrypt.hash(user.password, this.SALT_ROUNDS);
         
         user.password = hashPassword;
         const newUser = await this.userService.create(user);
-
-      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-      await this.authService.createOtp(newUser.id, otpCode);
-      await this.emailService.sendOtpEmail(user.emailAddress, otpCode);
-
+        this.generateOtp(newUser);
+        const { password, ...userWithoutPassword } = newUser;
+        return userWithoutPassword;
+    }
     
-      const { password, ...userWithoutPassword } = newUser;
-      return userWithoutPassword;
+    async generateOtp(user:User){
+      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+      await this.authService.createOtp(user.id, otpCode);
+      await this.emailService.sendOtpEmail(user.emailAddress, otpCode);
     }
 
     async getUsers(): Promise<Omit<User, 'password'>[]> {

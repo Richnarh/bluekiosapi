@@ -9,5 +9,6 @@ router.post('/', authController.loginUser.bind(authController));
 router.post('/logout', authMiddleware, authController.logoutUser.bind(authController));
 router.post('/refresh', authController.refreshToken.bind(authController));
 router.post('/verify', authController.verifyOtp.bind(authController));
+router.post('/request', authController.requestOtp.bind(authController));
 
 export default router;

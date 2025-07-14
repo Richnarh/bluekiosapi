@@ -14,6 +14,6 @@ export interface LoginResponse extends Base{
 }
 
 export interface LoginRequest {
-    emailAddress:string, 
+    emailPhone:string, 
     password:string
 }

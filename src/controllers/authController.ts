@@ -5,19 +5,22 @@ import { HttpStatus } from '@/utils/constants';
 import { AppError } from '@/utils/errors';
 import { LoginRequest } from '@/models/model'
 import prisma from '@/config/prisma';
+import { UserService } from '@/services/userService';
 
 export class AuthController{
   private auth:AuthService;
+  private userService:UserService;
 
   constructor(){
     this.auth = new AuthService();
+    this.userService = new UserService();
   }
 
     async loginUser(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const request  = req.body as LoginRequest;
-            const { emailAddress, password } = request;
-            const loginReq = { emailAddress: emailAddress, password: password }
+            const { emailPhone, password } = request;
+            const loginReq = { emailPhone: emailPhone, password: password }
             const { user, accessToken, refreshToken } = await this.auth.loginUser(loginReq);
 
             res.cookie('refreshToken', refreshToken, {
@@ -29,7 +32,7 @@ export class AuthController{
 
             res.status(HttpStatus.OK).json({
             message: 'Login successful',
-            data: { id: user.id, emailAddress: user.emailAddress, fullName: user.fullName, isVerified: user.isVerified }, accessToken,refreshToken });
+            data: { id: user.id, emailAddress: user.emailAddress, fullName: user.fullName, isVerified: user.isVerified, accessToken,refreshToken } });
         } catch (error) {
             next(error);
         }
@@ -71,6 +74,29 @@ export class AuthController{
             await this.auth.deleteOtp(code);
             res.status(HttpStatus.OK).json({ message: 'Account verified successfully', user });
         } catch (error) {
+            next(error);
+        }
+    }
+
+    async requestOtp(req:Request, res:Response, next:NextFunction){
+        try {
+            const { emailPhone } = req.body;
+            const users = await prisma.user.findMany({ 
+                where: {
+                OR: [
+                    { emailAddress: emailPhone },
+                    { phoneNumber: emailPhone }
+                ]
+                }
+            });
+            if (!users || users.length === 0) {
+                throw new AppError(`The entered: ${emailPhone} does not exist.`, HttpStatus.BAD_REQUEST);
+            }
+            const user = users[0];
+            this.userService.generateOtp(user);
+            res.status(HttpStatus.OK).json({message: `OTP has been sent to: ${emailPhone}, OTP expires after 10 munites`});
+        } catch (error) {
+            console.log(error)
             next(error);
         }
     }

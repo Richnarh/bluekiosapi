@@ -9,9 +9,8 @@ import { AppError } from '@/utils/errors';
 import { logger } from '@/utils/logger';
 import { CrudService } from './crudservice';
 import { plainToInstance } from 'class-transformer';
-import { validate } from 'class-validator';
+import { isEmpty, validate } from 'class-validator';
 import { LoginUserValidator, RefreshTokenValidator, VerifyOtpValidator } from '@/utils/validators';
-
 
 export class AuthService{
   private SALT_ROUNDS = 10;
@@ -24,7 +23,7 @@ export class AuthService{
     this.tokenService = new CrudService<RefreshToken>(prisma.refreshToken);
     this.userService = new CrudService<User>(prisma.user);
   }
-    async loginUser(loginReq:{emailAddress: string, password: string}): Promise<{ user: User; accessToken: string; refreshToken: string }> {
+    async loginUser(loginReq:{emailPhone: string, password: string}): Promise<{ user: User; accessToken: string; refreshToken: string }> {
         const loginDto = plainToInstance(LoginUserValidator, loginReq);
         const errors = await validate(loginDto);
 
@@ -36,27 +35,36 @@ export class AuthService{
             throw new AppError(`Validation failed: ${errorMessages}`, HttpStatus.BAD_REQUEST);
         }
 
-        const  { emailAddress, password } = loginReq;
+        const  { emailPhone, password } = loginReq;
         
-      const user = await prisma.user.findUnique({ where: { emailAddress } });
-      if (!user) {
-        throw new AppError('Invalid email or password', HttpStatus.BAD_REQUEST);
+      const users = await prisma.user.findMany({ 
+        where: {
+          OR: [
+            { emailAddress: emailPhone },
+            { phoneNumber: emailPhone }
+          ]
+        }
+      });
+      if (!users || users.length === 0) {
+        throw new AppError('Invalid credentials', HttpStatus.BAD_REQUEST);
       }
+      const user = users[0];
       if (!user.isVerified) {
-        logger.warn('User not verified for login', { emailAddress });
         throw new AppError('Please verify your email before logging in', HttpStatus.BAD_REQUEST);
       }
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
-        logger.warn('Invalid password for login', { emailAddress });
         throw new AppError('Invalid email or password', HttpStatus.BAD_REQUEST);
       }
       if (!process.env.JWT_SECRET) {
-        logger.error('JWT_SECRET is not defined');
         throw new AppError('Server configuration error', HttpStatus.INTERNAL_SERVER_ERROR);
       }
-      const accessToken = jwt.sign({ id: user.id, emailAddress: user.emailAddress }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        
+      let accessToken:string | null;
+      if(!isEmpty(user.emailAddress)){
+        accessToken = jwt.sign({ id: user.id, emailAddress: user.emailAddress }, process.env.JWT_SECRET, { expiresIn: '3h' });
+      }else{
+        accessToken = jwt.sign({ id: user.id, phoneNumber: user.phoneNumber }, process.env.JWT_SECRET, { expiresIn: '3h' });
+      }
       const refreshToken = await this.createRefreshToken(user.id);
       logger.info('User logged in successfully', { userId: user.id });
       return { user, accessToken, refreshToken };
@@ -211,7 +219,7 @@ export class AuthService{
         .map(err => Object.values(err.constraints || {}).join(', '))
         .join('; ');
         logger.warn('Validation failed for verifyOtp', { errors: errorMessages });
-        throw new AppError(`Validation failed: ${errorMessages}`, HttpStatus.BAD_REQUEST);
+        throw new AppError(`${errorMessages}`, HttpStatus.BAD_REQUEST);
     }
     const { userId, code } = verifyDto;
     

@@ -19,7 +19,7 @@ export class UserController{
             const user = req.body as User;
             const result = await this.us.addUser(user);
             res.json({
-                message: 'User created successfully. Please verify your email with the OTP sent.',
+                message: 'User created successfully. Please verify your account with the OTP sent, OTP expires after 10 munites',
                 data: result,
             });
         } catch (error) {

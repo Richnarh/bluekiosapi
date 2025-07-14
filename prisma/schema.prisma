@@ -14,10 +14,22 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum PaymentStatus {
-  PENDING
-  FULLY_PAID
-  PARTIALLY_PAID
+enum Region {
+  AHAFO
+  ASHANTI
+  BONO_EAST
+  CENTRAL
+  EASTERN
+  GREATER_ACCRA
+  NORTH_EAST
+  NORTHERN
+  OTI
+  SAVANNAH
+  UPPER_EAST
+  UPPER_WEST
+  VOLTER
+  WESTERN
+  WESTERN_NORTH
 }
 
 model User {
@@ -28,6 +40,7 @@ model User {
   password     String  @db.VarChar(255)
   fullName     String  @map("full_name") @db.VarChar(255)
   address      String  @map("address") @db.VarChar(255)
+  region       Region  @map("region")
   imagePath    String? @map("image_path") @db.Text
   isVerified   Boolean @default(false) @map("is_verified")
 
