@@ -1,5 +1,4 @@
 import bcrypt from 'bcrypt';
-import { ulid } from "ulid";
 
 import prisma from "@/config/prisma";
 import { User } from '../../generated/prisma';
@@ -32,7 +31,7 @@ export class UserService{
             const errorMessages = errors
             .map(err => Object.values(err.constraints || {}).join(', '))
             .join('; ');
-            logger.warn('Validation failed for create:user', { errors: errorMessages });
+            logger.warn({ errors: errorMessages });
             throw new AppError(`${errorMessages}`, HttpStatus.BAD_REQUEST);
         }
         const hashPassword = await bcrypt.hash(user.password, this.SALT_ROUNDS);

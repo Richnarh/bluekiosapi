@@ -37,6 +37,11 @@ enum MeasureType {
   CUSTOM
 }
 
+enum Gender {
+  MALE
+  FEMALE
+}
+
 model User {
   id           String  @id @default(ulid()) @db.VarChar(255)
   phoneNumber  String  @unique @map("phone_number") @db.VarChar(100)
@@ -120,19 +125,18 @@ model ClothImage {
 }
 
 model CustomerDetails {
-  id                  String @id @default(ulid()) @db.VarChar(255)
-  customerId          String @map("customer_id") @db.VarChar(255)
-  femaleMeasurementId String @map("female_measurement_id") @db.VarChar(255)
-  maleMeasurementId   String @map("male_measurement_id") @db.VarChar(255)
-  userId              String @map("user_id") @db.VarChar(255)
+  id                  String   @id @default(ulid()) @db.VarChar(255)
+  userId              String   @map("user_id") @db.VarChar(255)
+  customerId          String   @map("customer_id") @db.VarChar(255)
+  femaleMeasurementId String   @map("female_measurement_id") @db.VarChar(255)
+  maleMeasurementId   String   @map("male_measurement_id") @db.VarChar(255)
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @default(now()) @map("updated_at")
 
   user              User              @relation(fields: [userId], references: [id])
   customer          Customer          @relation(fields: [customerId], references: [id])
   femaleMeasurement FemaleMeasurement @relation(fields: [femaleMeasurementId], references: [id])
   maleMeasurement   MaleMeasurement   @relation(fields: [maleMeasurementId], references: [id])
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @default(now()) @map("updated_at")
 
   @@map("customer_details")
 }
@@ -161,30 +165,24 @@ model MaleMeasurement {
   value       Int         @db.Integer
   userId      String      @map("user_id") @db.VarChar(255)
   status      Boolean     @default(false) @map("status")
-  measureType MeasureType @default(DEFAULT_TYPE) @map("measure_type")
+  measureType MeasureType @default(DEFAULT_TYPE) @map("measure_type") // remove default later
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @default(now()) @map("updated_at")
 
   customerDetails CustomerDetails[]
-
-  user User @relation(fields: [userId], references: [id])
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @default(now()) @map("updated_at")
+  user            User              @relation(fields: [userId], references: [id])
 
   @@map("male_measurements")
 }
 
 model FemaleMeasurement {
   id          String      @id @default(ulid()) @db.VarChar(255)
-  name        String      @db.VarChar(255)
-  value       Int         @db.Integer
   userId      String      @map("user_id") @db.VarChar(255)
-  createdAt   DateTime    @default(now()) @map("created_at")
-  updatedAt   DateTime    @default(now()) @map("updated_at")
-  status      Boolean     @default(false) @map("status")
+  name        String      @db.VarChar(255)
   measureType MeasureType @default(DEFAULT_TYPE) @map("measure_type")
+  status      Boolean     @default(false) @map("status")
 
-  user User @relation(fields: [userId], references: [id])
-
+  user            User              @relation(fields: [userId], references: [id])
   customerDetails CustomerDetails[]
 
   @@map("female_measurements")

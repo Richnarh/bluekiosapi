@@ -1,5 +1,11 @@
 -- CreateEnum
-CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'FULLY_PAID', 'PARTIALLY_PAID');
+CREATE TYPE "Region" AS ENUM ('AHAFO', 'ASHANTI', 'BONO_EAST', 'CENTRAL', 'EASTERN', 'GREATER_ACCRA', 'NORTH_EAST', 'NORTHERN', 'OTI', 'SAVANNAH', 'UPPER_EAST', 'UPPER_WEST', 'VOLTER', 'WESTERN', 'WESTERN_NORTH');
+
+-- CreateEnum
+CREATE TYPE "MeasureType" AS ENUM ('DEFAULT_TYPE', 'CUSTOM');
+
+-- CreateEnum
+CREATE TYPE "Gender" AS ENUM ('MALE', 'FEMALE');
 
 -- CreateTable
 CREATE TABLE "users" (
@@ -10,6 +16,7 @@ CREATE TABLE "users" (
     "password" VARCHAR(255) NOT NULL,
     "full_name" VARCHAR(255) NOT NULL,
     "address" VARCHAR(255) NOT NULL,
+    "region" "Region" NOT NULL,
     "image_path" TEXT,
     "is_verified" BOOLEAN NOT NULL DEFAULT false,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -32,7 +39,7 @@ CREATE TABLE "otp" (
 -- CreateTable
 CREATE TABLE "refresh_token" (
     "id" VARCHAR(255) NOT NULL,
-    "access_token" VARCHAR(255) NOT NULL,
+    "refresh_token" VARCHAR(255) NOT NULL,
     "user_id" VARCHAR(255) NOT NULL,
     "expires_at" TIMESTAMP(3) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -68,10 +75,10 @@ CREATE TABLE "cloth_images" (
 -- CreateTable
 CREATE TABLE "customer_details" (
     "id" VARCHAR(255) NOT NULL,
+    "user_id" VARCHAR(255) NOT NULL,
     "customer_id" VARCHAR(255) NOT NULL,
     "female_measurement_id" VARCHAR(255) NOT NULL,
     "male_measurement_id" VARCHAR(255) NOT NULL,
-    "user_id" VARCHAR(255) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -99,6 +106,8 @@ CREATE TABLE "male_measurements" (
     "name" VARCHAR(255) NOT NULL,
     "value" INTEGER NOT NULL,
     "user_id" VARCHAR(255) NOT NULL,
+    "status" BOOLEAN NOT NULL DEFAULT false,
+    "measure_type" "MeasureType" NOT NULL DEFAULT 'DEFAULT_TYPE',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -108,11 +117,11 @@ CREATE TABLE "male_measurements" (
 -- CreateTable
 CREATE TABLE "female_measurements" (
     "id" VARCHAR(255) NOT NULL,
-    "name" VARCHAR(255) NOT NULL,
-    "value" INTEGER NOT NULL,
     "user_id" VARCHAR(255) NOT NULL,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "customer_id" VARCHAR(255) NOT NULL,
+    "name" VARCHAR(255) NOT NULL,
+    "measure_type" "MeasureType" NOT NULL DEFAULT 'DEFAULT_TYPE',
+    "status" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "female_measurements_pkey" PRIMARY KEY ("id")
 );
@@ -128,6 +137,9 @@ CREATE UNIQUE INDEX "users_company_name_key" ON "users"("company_name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "otp_code_key" ON "otp"("code");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "refresh_token_refresh_token_key" ON "refresh_token"("refresh_token");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "customers_phone_number_key" ON "customers"("phone_number");

@@ -1,6 +1,5 @@
 import prisma from "@/config/prisma";
-import { AuthRequest } from "@/middleware/authMiddleware";
-import { CustomerService } from "@/services/CustomerService"
+import { CustomerService } from "@/services/CustomerService";
 import { HttpStatus } from "@/utils/constants";
 import { AppError } from "@/utils/errors";
 import { logger } from "@/utils/logger";

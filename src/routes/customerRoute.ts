@@ -40,5 +40,6 @@ const upload = multer({
 });
 
 router.post('/:id/upload', authMiddleware, upload.single('image'), customerController.uploadImage.bind(customerController));
+// router.get('/details', authMiddleware, customerController.)
 
 export default router;
