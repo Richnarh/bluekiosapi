@@ -53,11 +53,15 @@ export class MeasurementController{
 
     async deleteMeasurement(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const { id } = req.params;
-            const { chars } = req.body;
-            const measurement = await this.measurementService.deleteMeasurement(id, chars);
+            const { id, char } = req.params;
+            const measurement = await this.measurementService.deleteMeasurement(id, char);
+            console.log('measurement: ', measurement);
             if (measurement) {
-                res.status(HttpStatus.OK).json({ message: 'Measurement deleted successfully' });
+                res.status(HttpStatus.OK).json({ 
+                    message: `${measurement.name} Measurement deleted successfully`,
+                    char,
+                    id: measurement.id
+                });
             } else {
                 throw new AppError('Measurment not found', HttpStatus.NOT_FOUND);
             }
