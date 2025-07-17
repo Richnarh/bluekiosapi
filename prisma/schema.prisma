@@ -161,16 +161,15 @@ model DressCollection {
 
 model MaleMeasurement {
   id          String      @id @default(ulid()) @db.VarChar(255)
-  name        String      @db.VarChar(255)
-  value       Int         @db.Integer
   userId      String      @map("user_id") @db.VarChar(255)
-  status      Boolean     @default(false) @map("status")
+  name        String      @db.VarChar(255)
   measureType MeasureType @default(DEFAULT_TYPE) @map("measure_type") // remove default later
+  status      Boolean     @default(false) @map("status")
   createdAt   DateTime    @default(now()) @map("created_at")
   updatedAt   DateTime    @default(now()) @map("updated_at")
 
-  customerDetails CustomerDetails[]
   user            User              @relation(fields: [userId], references: [id])
+  customerDetails CustomerDetails[]
 
   @@map("male_measurements")
 }
