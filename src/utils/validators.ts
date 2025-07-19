@@ -103,6 +103,9 @@ export class CustomerValidator{
 
   @IsNotEmpty({ message: 'Phone Number is required' })
   phoneNumber?: string;
+
+  @IsNotEmpty({ message: 'UserId is required' })
+  userId?: string;
 }
 
 export class MeasurementValidator{

@@ -93,13 +93,13 @@ model RefreshToken {
 
 model Customer {
   id              String            @id @default(ulid())
+  userId          String            @map("user_id") @db.VarChar(255)
   fullName        String            @map("full_name") @db.VarChar(255)
   phoneNumber     String            @unique @map("phone_number") @db.VarChar(100)
   address         String            @db.VarChar(100)
   dressCollection DressCollection[]
   clothImage      ClothImage[]
   customerDetails CustomerDetails[]
-  userId          String            @map("user_id") @db.VarChar(255)
 
   user User @relation(fields: [userId], references: [id])
 
@@ -130,6 +130,7 @@ model CustomerDetails {
   customerId          String   @map("customer_id") @db.VarChar(255)
   femaleMeasurementId String   @map("female_measurement_id") @db.VarChar(255)
   maleMeasurementId   String   @map("male_measurement_id") @db.VarChar(255)
+  measuredValue       Int      @map("measured_value")
   createdAt           DateTime @default(now()) @map("created_at")
   updatedAt           DateTime @default(now()) @map("updated_at")
 

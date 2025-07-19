@@ -25,8 +25,6 @@ export class CustomerService{
             logger.warn('Validation failed for create:user', { errors: errorMessages });
             throw new AppError(`Validation failed: ${errorMessages}`, HttpStatus.BAD_REQUEST);
         }
-        customer.fullName = dto.fullName!;
-        customer.phoneNumber = dto.phoneNumber!
         const result = await this.crud.create(customer)
         logger.info('result: ', result);
         return result;

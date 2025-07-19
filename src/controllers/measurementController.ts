@@ -38,9 +38,22 @@ export class MeasurementController{
 
     async getMeasurementById(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-        const { id } = req.params;
-        const { chars } = req.body;
-        const measurement = await this.measurementService.getMeasurementById(id,chars);
+        const { id, char } = req.params;
+        const measurement = await this.measurementService.getMeasurementById(id,char);
+        if (measurement) {
+            res.status(HttpStatus.OK).json({ data: measurement });
+        } else {
+            throw new AppError('Male measurement not found', HttpStatus.NOT_FOUND);
+        }
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getActiveMeasurement(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+        const { char } = req.params;
+        const measurement = await this.measurementService.getActiveMeasurement(char);
         if (measurement) {
             res.status(HttpStatus.OK).json({ data: measurement });
         } else {

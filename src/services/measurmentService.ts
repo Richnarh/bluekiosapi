@@ -80,6 +80,21 @@ export class MeasurementService{
         return await this.femaleCrud.findUnique(id);
     }
 
+    async getActiveMeasurement(char: string){
+        if(char == 'M'){
+            return await prisma.maleMeasurement.findMany({
+                where: {
+                    status: true
+                }
+            });
+        }
+        return await prisma.femaleMeasurement.findMany({
+                where: {
+                    status: true
+                }
+            });
+    }
+
     async deleteMeasurement(id: string, char:string): Promise<MaleMeasurement | FemaleMeasurement | null> {
         if(char == 'M'){
             return await this.maleCrud.delete(id);
