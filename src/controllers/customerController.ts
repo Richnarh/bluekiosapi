@@ -29,7 +29,7 @@ export class CustomerController{
 
     async getAllCustomers(req:Request, res:Response, next:NextFunction){
         try {
-            const { userId } = req.body;
+            const userId = req.headers['userid']?.toString();
             const result = await prisma.customer.findMany({ where: { userId } })
             res.status(HttpStatus.OK).json({
                 count: result.length,

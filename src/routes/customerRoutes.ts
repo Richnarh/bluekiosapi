@@ -40,6 +40,8 @@ const upload = multer({
 });
 
 router.post('/', customerController.addCustomer.bind(customerController));
+router.put('/', customerController.addCustomer.bind(customerController));
+router.get('/', customerController.getAllCustomers.bind(customerController));
 router.post('/:id/upload', authMiddleware, upload.single('image'), customerController.uploadImage.bind(customerController));
 // router.get('/details', authMiddleware, customerController.)
 

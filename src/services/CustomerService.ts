@@ -23,7 +23,7 @@ export class CustomerService{
             .map(err => Object.values(err.constraints || {}).join(', '))
             .join('; ');
             logger.warn('Validation failed for create:user', { errors: errorMessages });
-            throw new AppError(`Validation failed: ${errorMessages}`, HttpStatus.BAD_REQUEST);
+            throw new AppError(`${errorMessages}`, HttpStatus.BAD_REQUEST);
         }
         const result = await this.crud.create(customer)
         logger.info('result: ', result);
