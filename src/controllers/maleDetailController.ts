@@ -20,7 +20,7 @@ export class MaleDetailController {
             }
             const userId = req.headers['userid']?.toString();
             const count = this.maleService.save(details,req.method,userId!);
-            res.status(HttpStatus.CREATED).json({ message: `Record added successfully.`, data: count });
+            res.status(HttpStatus.CREATED).json({ message: `Action applied successfully.`, data: count });
         } catch (error) {
             next(error);
         }
@@ -29,7 +29,7 @@ export class MaleDetailController {
     async getAllDetails(req: Request, res: Response, next: NextFunction) {
         try {
             const { referenceId } = req.params
-            let result = await prisma.maleDetails.findMany({
+            const result = await prisma.maleDetails.findMany({
                     where: {
                         referenceId
                     },
