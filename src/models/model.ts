@@ -17,3 +17,8 @@ export interface LoginRequest {
     emailPhone:string, 
     password:string
 }
+
+export enum FormType {
+    MALE_FORM = "MALE_FORM",
+    FEMALE_FORM = "FEMALE_FORM"
+}

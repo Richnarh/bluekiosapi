@@ -1,0 +1,10 @@
+import { FemaleDetailController } from '@/controllers/femaleDetailController';
+import express from 'express';
+
+const router = express.Router();
+
+const controller = new FemaleDetailController();
+router.post('/', controller.createMany.bind(controller));
+router.get('/:customerId', controller.getAllDetails.bind(controller));
+
+export default router;

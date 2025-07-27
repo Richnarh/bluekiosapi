@@ -38,9 +38,16 @@ app.use((req, res, next) => {
   next();
 });
 
+const pascalToKebab = (str: string) => {
+  return str
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2') 
+    .replace(/([A-Z])([A-Z][a-z])/g, '$1-$2')
+    .toLowerCase();
+}
+
 Object.entries(routes).forEach(([prefix, router]) => {
-  console.log(`${baseApi}/${prefix}`)
-  app.use(`${baseApi}/${prefix}`, router);
+  console.log(`${baseApi}/${pascalToKebab(prefix)}`)
+  app.use(`${baseApi}/${pascalToKebab(prefix)}`, router);
 });
 
 app.use(errorMiddleware);

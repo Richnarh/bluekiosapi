@@ -39,8 +39,8 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
 });
 
-router.post('/', customerController.addCustomer.bind(customerController));
-router.put('/', customerController.addCustomer.bind(customerController));
+router.post('/', customerController.create.bind(customerController));
+router.put('/', customerController.create.bind(customerController));
 router.get('/', customerController.getAllCustomers.bind(customerController));
 router.post('/:id/upload', authMiddleware, upload.single('image'), customerController.uploadImage.bind(customerController));
 // router.get('/details', authMiddleware, customerController.)

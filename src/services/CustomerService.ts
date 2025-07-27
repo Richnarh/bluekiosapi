@@ -3,19 +3,19 @@ import { CrudService } from "./crudservice";
 import prisma from "@/config/prisma";
 import { plainToInstance } from "class-transformer";
 import { CustomerValidator } from "@/utils/validators";
-import { validate } from "class-validator";
+import { isEmpty, validate } from "class-validator";
 import { logger } from '@/utils/logger';
 import { AppError } from "@/utils/errors";
 import { HttpStatus } from "@/utils/constants";
 
 export class CustomerService{
-    private crud:CrudService<Customer>;
+    private custService:CrudService<Customer>;
 
     constructor(){
-        this.crud = new CrudService<Customer>(prisma.customer);
+        this.custService = new CrudService<Customer>(prisma.customer);
     }
 
-    async create(customer:Customer):Promise<Omit<Customer, 'createdAt' | 'updatedAt'>>{
+    async create(customer:Customer):Promise<Omit<Customer, 'createdAt' | 'updatedAt'> | null>{
         const dto = plainToInstance(CustomerValidator, customer);
         const errors = await validate(dto);
          if (errors.length > 0) {
@@ -25,8 +25,12 @@ export class CustomerService{
             logger.warn('Validation failed for create:user', { errors: errorMessages });
             throw new AppError(`${errorMessages}`, HttpStatus.BAD_REQUEST);
         }
-        const result = await this.crud.create(customer)
-        logger.info('result: ', result);
+        let result;
+        if(!isEmpty(customer.id)){
+            result = this.custService.update(customer.id, customer);
+        }else{
+            result = await this.custService.create(customer)
+        }
         return result;
     }
 
@@ -37,7 +41,7 @@ export class CustomerService{
     }
 
     async getCustomeryId(id: string){
-        const u = await this.crud.findUnique(id);
+        const u = await this.custService.findUnique(id);
         let customer = null;
         if (u) {
             customer = u;
@@ -47,18 +51,4 @@ export class CustomerService{
         }
         return customer;
     }
-
-    async update(id: string, data: Partial<Customer>): Promise<Omit<Customer, 'createdAt' | 'updatedAt'> | null> {
-        const dto = plainToInstance(CustomerValidator, data);
-        const errors = await validate(dto);
-        if (errors.length > 0) {
-            const errorMessages = errors
-            .map(err => Object.values(err.constraints || {}).join(', '))
-            .join('; ');
-            logger.warn('Validation failed for update:customer', { errors: errorMessages });
-            throw new AppError(`Validation failed: ${errorMessages}`, HttpStatus.BAD_REQUEST);
-        }
-        return this.crud.update(id, data);
-    }
-
 }

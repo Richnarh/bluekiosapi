@@ -115,3 +115,11 @@ export class MeasurementValidator{
   @IsNotEmpty({ message: 'UserId is required'})
   userId?: string;
 }
+
+export class CustomerDetailsValidator {
+  @IsNotEmpty({ message: 'Customer ID is required' })
+  customerId?: string;
+
+  @IsNotEmpty({ message: 'User ID is required' })
+  userId?: string;
+}

@@ -16,7 +16,7 @@ export class MeasurementController{
             const male = req.body as MaleMeasurement;
             const result = await this.measurementService.create(male);
             res.status(male.id ? HttpStatus.OK : HttpStatus.CREATED).json({
-                message: `${male.name} ${male.id ? 'updated' : 'addedd'} successfully.`,
+                message: `${male.name} ${male.id ? 'updated' : 'added'} successfully.`,
                 data: result,
             });
         } catch (error) {
@@ -68,7 +68,6 @@ export class MeasurementController{
         try {
             const { id, char } = req.params;
             const measurement = await this.measurementService.deleteMeasurement(id, char);
-            console.log('measurement: ', measurement);
             if (measurement) {
                 res.status(HttpStatus.OK).json({ 
                     message: `${measurement.name} Measurement deleted successfully`,

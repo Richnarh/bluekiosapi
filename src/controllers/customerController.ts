@@ -14,12 +14,12 @@ export class CustomerController{
         this.customerService = new CustomerService();
     }
 
-    async addCustomer(req:Request, res:Response, next:NextFunction){
+    async create(req:Request, res:Response, next:NextFunction){
         try {
             const customer = req.body as Customer;
             const result = await this.customerService.create(customer);
-            res.status(HttpStatus.CREATED).json({
-                message: 'Customer created successfully.',
+            res.status(customer.id ? HttpStatus.OK : HttpStatus.CREATED).json({
+                message: `${customer.fullName} ${customer.id ? 'updated' : 'added'} successfully.`,
                 data: result,
             });
         } catch (error) {
@@ -46,22 +46,6 @@ export class CustomerController{
             const customer = await prisma.customer.findUnique({ where: { id }});
             if (customer) {
                 res.status(HttpStatus.OK).json({ data:customer });
-            } else {
-                throw new AppError('User not found', HttpStatus.NOT_FOUND);
-            }
-        } catch (error) {
-            next(error);
-        }
-    }
-    
-    async update(req:Request, res:Response, next:NextFunction){
-        try {
-            const { id } = req.params;
-            const customer = req.body as Customer;
-            const result = this.customerService.update(id, customer);
-            logger.info(result);
-            if (result) {
-                res.status(HttpStatus.OK).json(result);
             } else {
                 throw new AppError('User not found', HttpStatus.NOT_FOUND);
             }

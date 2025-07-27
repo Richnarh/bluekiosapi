@@ -53,6 +53,7 @@ model User {
   region       Region  @map("region")
   imagePath    String? @map("image_path") @db.Text
   isVerified   Boolean @default(false) @map("is_verified")
+  // username String @unique @map("username") @db.VarChar(100)
 
   otps              Otp[]
   refreshTokens     RefreshToken[]
@@ -61,7 +62,9 @@ model User {
   clothImage        ClothImage[]
   customer          Customer[]
   dressCollection   DressCollection[]
-  customerDetails   CustomerDetails[]
+  maleDetails       MaleDetails[]
+  femaleDetails     FemaleDetails[]
+  reference         Reference[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @map("updated_at")
@@ -99,7 +102,9 @@ model Customer {
   address         String            @db.VarChar(100)
   dressCollection DressCollection[]
   clothImage      ClothImage[]
-  customerDetails CustomerDetails[]
+  maleDetails     MaleDetails[]
+  femaleDetails   FemaleDetails[]
+  reference       Reference[]
 
   user User @relation(fields: [userId], references: [id])
 
@@ -124,22 +129,58 @@ model ClothImage {
   @@map("cloth_images")
 }
 
-model CustomerDetails {
+model MaleDetails {
+  id                String   @id @default(ulid()) @db.VarChar(255)
+  userId            String   @map("user_id") @db.VarChar(255)
+  customerId        String   @map("customer_id") @db.VarChar(255)
+  referenceId       String?  @map("reference_id") @db.VarChar(255)
+  maleMeasurementId String?  @map("male_measurement_id") @db.VarChar(255)
+  measuredValue     Decimal  @map("measured_value") @db.Decimal(10, 2)
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @default(now()) @map("updated_at")
+
+  user            User             @relation(fields: [userId], references: [id])
+  customer        Customer         @relation(fields: [customerId], references: [id])
+  maleMeasurement MaleMeasurement? @relation(fields: [maleMeasurementId], references: [id])
+  reference       Reference?       @relation(fields: [referenceId], references: [id])
+
+  @@map("male_details")
+}
+
+model FemaleDetails {
   id                  String   @id @default(ulid()) @db.VarChar(255)
   userId              String   @map("user_id") @db.VarChar(255)
   customerId          String   @map("customer_id") @db.VarChar(255)
-  femaleMeasurementId String   @map("female_measurement_id") @db.VarChar(255)
-  maleMeasurementId   String   @map("male_measurement_id") @db.VarChar(255)
-  measuredValue       Int      @map("measured_value")
+  referenceId         String?  @map("reference_id") @db.VarChar(255)
+  femaleMeasurementId String?  @map("female_measurement_id") @db.VarChar(255)
+  measuredValue       Decimal  @map("measured_value") @db.Decimal(10, 2)
   createdAt           DateTime @default(now()) @map("created_at")
   updatedAt           DateTime @default(now()) @map("updated_at")
 
-  user              User              @relation(fields: [userId], references: [id])
-  customer          Customer          @relation(fields: [customerId], references: [id])
-  femaleMeasurement FemaleMeasurement @relation(fields: [femaleMeasurementId], references: [id])
-  maleMeasurement   MaleMeasurement   @relation(fields: [maleMeasurementId], references: [id])
+  user              User               @relation(fields: [userId], references: [id])
+  customer          Customer           @relation(fields: [customerId], references: [id])
+  femaleMeasurement FemaleMeasurement? @relation(fields: [femaleMeasurementId], references: [id])
+  reference         Reference?         @relation(fields: [referenceId], references: [id])
 
-  @@map("customer_details")
+  @@map("female_details")
+}
+
+model Reference {
+  id          String   @id @default(ulid()) @db.VarChar(255)
+  userId      String   @map("user_id") @db.VarChar(255)
+  customerId  String?  @map("customer_id") @db.VarChar(255)
+  refName     String   @map("ref_name") @db.VarChar(100)
+  description String   @map("description") @db.Text
+  addedBy     String   @map("added_by") @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @map("updated_at")
+
+  user          User            @relation(fields: [userId], references: [id])
+  customer      Customer?       @relation(fields: [customerId], references: [id])
+  maleDetails   MaleDetails[]
+  femaleDetails FemaleDetails[]
+
+  @@map("references")
 }
 
 model DressCollection {
@@ -169,8 +210,8 @@ model MaleMeasurement {
   createdAt   DateTime    @default(now()) @map("created_at")
   updatedAt   DateTime    @default(now()) @map("updated_at")
 
-  user            User              @relation(fields: [userId], references: [id])
-  customerDetails CustomerDetails[]
+  user            User          @relation(fields: [userId], references: [id])
+  customerDetails MaleDetails[]
 
   @@map("male_measurements")
 }
@@ -182,8 +223,10 @@ model FemaleMeasurement {
   measureType MeasureType @default(DEFAULT_TYPE) @map("measure_type")
   status      Boolean     @default(false) @map("status")
 
-  user            User              @relation(fields: [userId], references: [id])
-  customerDetails CustomerDetails[]
+  user            User            @relation(fields: [userId], references: [id])
+  customerDetails FemaleDetails[]
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @default(now()) @map("updated_at")
 
   @@map("female_measurements")
 }
