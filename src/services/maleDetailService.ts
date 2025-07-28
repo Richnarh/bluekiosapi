@@ -1,16 +1,11 @@
 import { MaleDetails, Reference } from "generated/prisma";
-import { CrudService } from "./crudservice";
 import prisma from "@/config/prisma";
 import { AppError } from "@/utils/errors";
 import { FormType } from "@/models/model";
 import { HttpStatus } from "@/utils/constants";
 
 export class MaleDetailService{
-    private maleService:CrudService<MaleDetails>;
-    constructor(){
-        this.maleService = new CrudService<MaleDetails>(prisma.maleDetails);
-    }
-
+    
 async save(details: MaleDetails[], method: string, userId: string) {
     try {
         if (method === 'POST') {
@@ -81,7 +76,6 @@ async deleteDetails(referenceId: string, userId: string) {
         if (remainingDetails === 0) {
             await prisma.reference.delete({ where: { id: referenceId } });
         }
-        console.log('count: ', deleteResult.count)
         return deleteResult.count;
     } catch (error) {
         throw new AppError(
@@ -90,7 +84,6 @@ async deleteDetails(referenceId: string, userId: string) {
         );
     }
 }
-
 
 async fetchAll(customerId: string, userId: string) {
     try {

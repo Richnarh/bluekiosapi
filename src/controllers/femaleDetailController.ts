@@ -27,22 +27,32 @@ export class FemaleDetailController {
 
     async getAllDetails(req: Request, res: Response, next: NextFunction) {
         try {
-            const userId = req.headers['userid']?.toString();
-            const { customerId } = req.params;
-            let result = await prisma.femaleDetails.findMany({
+            const { referenceId } = req.params
+            const result = await prisma.femaleDetails.findMany({
                     where: {
-                        AND: [
-                            { userId },
-                            { customerId }
-                        ]
+                        referenceId
                     },
                     include: {
                         femaleMeasurement: {
                             select:{ id:true, name:true }
                         }
                     }
-                });
+                })
             res.status(HttpStatus.OK).json({ data: result });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async deleteDetails(req: Request, res: Response, next: NextFunction){
+        try {
+            const { referenceId } = req.params;
+            const userId = req.headers['userId']?.toString();
+            if(!referenceId){
+                throw new AppError('referenceId is required', HttpStatus.BAD_REQUEST);
+            }
+            const count = this.femaleService.deleteDetails(referenceId,userId!);
+            res.status(HttpStatus.OK).json({message: `form deleted successfully`, count});
         } catch (error) {
             next(error);
         }

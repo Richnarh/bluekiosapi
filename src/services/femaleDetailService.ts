@@ -1,15 +1,10 @@
 import { FemaleDetails, Reference } from "generated/prisma";
-import { CrudService } from "./crudservice";
 import prisma from "@/config/prisma";
 import { FormType } from "@/models/model";
 import { AppError } from "@/utils/errors";
 import { HttpStatus } from "@/utils/constants";
 
 export class FemaleDetailService{
-    private femaleService:CrudService<FemaleDetails>;
-    constructor(){
-        this.femaleService = new CrudService<FemaleDetails>(prisma.femaleDetails);
-    }
 
     async save(details:FemaleDetails[], method:string, userId:string){
         let count;
@@ -43,7 +38,27 @@ export class FemaleDetailService{
         }
     }
     
-    async getAllFemaleDetails(): Promise<any[]> {
-        return this.femaleService.findMany();
+async deleteDetails(referenceId: string, userId: string) {
+    try {
+        const deleteResult = await prisma.femaleDetails.deleteMany({
+            where: {
+                AND: [
+                    { userId },
+                    { referenceId }
+                ]
+            }
+        });
+        const remainingDetails = await prisma.femaleDetails.count({ where: { referenceId } });
+        if (remainingDetails === 0) {
+            await prisma.reference.delete({ where: { id: referenceId } });
+        }
+        return deleteResult.count;
+    } catch (error) {
+        throw new AppError(
+            error instanceof AppError ? error.message : 'Failed to delete details',
+            error instanceof AppError ? error.statusCode : HttpStatus.INTERNAL_SERVER_ERROR
+        );
     }
+}
+
 }
