@@ -44,4 +44,18 @@ export class MaleDetailController {
             next(error);
         }
     }
+
+    async deleteDetails(req: Request, res: Response, next: NextFunction){
+        try {
+            const { referenceId } = req.params;
+            const userId = req.headers['userId']?.toString();
+            if(!referenceId){
+                throw new AppError('referenceId is required', HttpStatus.BAD_REQUEST);
+            }
+            const count = this.maleService.deleteDetails(referenceId,userId!);
+            res.status(HttpStatus.OK).json({message: `form deleted successfully`, count});
+        } catch (error) {
+            next(error);
+        }
+    }
 }   

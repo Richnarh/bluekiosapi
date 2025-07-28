@@ -67,37 +67,22 @@ async save(details: MaleDetails[], method: string, userId: string) {
 }
 
 
-async deleteDetails(customerId: string, userId: string) {
+async deleteDetails(referenceId: string, userId: string) {
     try {
-        const reference = await prisma.reference.findFirst({
-            where: {
-                AND: [
-                    { userId },
-                    { customerId }
-                ]
-            }
-        });
-        if (!reference) {
-            throw new AppError('Reference not found', HttpStatus.NOT_FOUND);
-        }
         const deleteResult = await prisma.maleDetails.deleteMany({
             where: {
                 AND: [
                     { userId },
-                    { customerId },
-                    { referenceId: reference.id }
+                    { referenceId }
                 ]
             }
         });
-        const remainingDetails = await prisma.maleDetails.count({
-            where: { referenceId: reference.id }
-        });
+        const remainingDetails = await prisma.maleDetails.count({ where: { referenceId } });
         if (remainingDetails === 0) {
-            await prisma.reference.delete({
-                where: { id: reference.id }
-            });
+            await prisma.reference.delete({ where: { id: referenceId } });
         }
-        return { count: deleteResult.count };
+        console.log('count: ', deleteResult.count)
+        return deleteResult.count;
     } catch (error) {
         throw new AppError(
             error instanceof AppError ? error.message : 'Failed to delete details',

@@ -7,5 +7,6 @@ const controller = new MaleDetailController();
 router.post('/', controller.createMany.bind(controller));
 router.put('/', controller.createMany.bind(controller));
 router.get('/:customerId', controller.getAllDetails.bind(controller));
+router.delete('/:referenceId', controller.deleteDetails.bind(controller));
 
 export default router;
