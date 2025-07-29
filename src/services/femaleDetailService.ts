@@ -3,13 +3,14 @@ import prisma from "@/config/prisma";
 import { FormType } from "@/models/model";
 import { AppError } from "@/utils/errors";
 import { HttpStatus } from "@/utils/constants";
+import { Ds } from "./DefaultService";
 
 export class FemaleDetailService{
 
     async save(details:FemaleDetails[], method:string, userId:string){
         let count;
         if(method === 'POST'){
-            const user = await prisma.user.findUnique({ where: { id: userId } });
+            const user = await Ds.getUser(userId);
             const ref = {
                 userId,
                 refName: FormType.FEMALE_FORM,

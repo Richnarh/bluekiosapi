@@ -42,6 +42,20 @@ enum Gender {
   FEMALE
 }
 
+enum PaymentMethod {
+  CASH
+  MOBILE_MONEY
+  BANK_TRANSFER
+  CHEQUE
+  CREDIT_CARD
+}
+
+enum PaymentStatus {
+  PENDING
+  FULLY_PAID
+  PART_PAYMENT
+}
+
 model User {
   id           String  @id @default(ulid()) @db.VarChar(255)
   phoneNumber  String  @unique @map("phone_number") @db.VarChar(100)
@@ -53,7 +67,7 @@ model User {
   region       Region  @map("region")
   imagePath    String? @map("image_path") @db.Text
   isVerified   Boolean @default(false) @map("is_verified")
-  // username String @unique @map("username") @db.VarChar(100)
+  username     String? @unique @map("username") @db.VarChar(100)
 
   otps              Otp[]
   refreshTokens     RefreshToken[]
@@ -65,9 +79,9 @@ model User {
   maleDetails       MaleDetails[]
   femaleDetails     FemaleDetails[]
   reference         Reference[]
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @default(now()) @map("updated_at")
+  addedBy           String?             @map("added_by") @db.VarChar(255)
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @default(now()) @map("updated_at")
 
   @@map("users")
 }
@@ -78,6 +92,7 @@ model Otp {
   userId    String   @map("user_id")
   expiresAt DateTime @map("expires_at")
   createdAt DateTime @default(now()) @map("created_at")
+  addedBy   String?  @map("added_by") @db.VarChar(255)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("otp")
@@ -89,6 +104,7 @@ model RefreshToken {
   userId       String   @map("user_id") @db.VarChar(255)
   expiresAt    DateTime @map("expires_at")
   createdAt    DateTime @default(now()) @map("created_at")
+  addedBy      String?  @map("added_by") @db.VarChar(255)
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("refresh_token")
@@ -108,6 +124,7 @@ model Customer {
 
   user User @relation(fields: [userId], references: [id])
 
+  addedBy   String?  @map("added_by") @db.VarChar(255)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @map("updated_at")
 
@@ -125,6 +142,7 @@ model ClothImage {
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @map("updated_at")
+  addedBy   String?  @map("added_by") @db.VarChar(255)
 
   @@map("cloth_images")
 }
@@ -133,11 +151,12 @@ model MaleDetails {
   id                String   @id @default(ulid()) @db.VarChar(255)
   userId            String   @map("user_id") @db.VarChar(255)
   customerId        String   @map("customer_id") @db.VarChar(255)
-  referenceId       String?  @map("reference_id") @db.VarChar(255)
-  maleMeasurementId String?  @map("male_measurement_id") @db.VarChar(255)
+  referenceId       String   @map("reference_id") @db.VarChar(255)
+  maleMeasurementId String   @map("male_measurement_id") @db.VarChar(255)
   measuredValue     Decimal  @map("measured_value") @db.Decimal(10, 2)
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @default(now()) @map("updated_at")
+  addedBy           String?  @map("added_by") @db.VarChar(255)
 
   user            User             @relation(fields: [userId], references: [id])
   customer        Customer         @relation(fields: [customerId], references: [id])
@@ -151,11 +170,12 @@ model FemaleDetails {
   id                  String   @id @default(ulid()) @db.VarChar(255)
   userId              String   @map("user_id") @db.VarChar(255)
   customerId          String   @map("customer_id") @db.VarChar(255)
-  referenceId         String?  @map("reference_id") @db.VarChar(255)
-  femaleMeasurementId String?  @map("female_measurement_id") @db.VarChar(255)
+  referenceId         String   @map("reference_id") @db.VarChar(255)
+  femaleMeasurementId String   @map("female_measurement_id") @db.VarChar(255)
   measuredValue       Decimal  @map("measured_value") @db.Decimal(10, 2)
   createdAt           DateTime @default(now()) @map("created_at")
   updatedAt           DateTime @default(now()) @map("updated_at")
+  addedBy             String?  @map("added_by") @db.VarChar(255)
 
   user              User               @relation(fields: [userId], references: [id])
   customer          Customer           @relation(fields: [customerId], references: [id])
@@ -166,14 +186,16 @@ model FemaleDetails {
 }
 
 model Reference {
-  id          String   @id @default(ulid()) @db.VarChar(255)
-  userId      String   @map("user_id") @db.VarChar(255)
-  customerId  String?  @map("customer_id") @db.VarChar(255)
-  refName     String   @map("ref_name") @db.VarChar(100)
-  description String   @map("description") @db.Text
-  addedBy     String   @map("added_by") @db.VarChar(255)
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @default(now()) @map("updated_at")
+  id            String    @id @default(ulid()) @db.VarChar(255)
+  userId        String    @map("user_id") @db.VarChar(255)
+  customerId    String?   @map("customer_id") @db.VarChar(255)
+  refName       String    @map("ref_name") @db.VarChar(100)
+  fabricName    String?   @map("fabric_name") @db.VarChar(100)
+  description   String    @map("description") @db.Text
+  completedDate DateTime? @map("completed_date")
+  addedBy       String?   @map("added_by") @db.VarChar(255)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @default(now()) @map("updated_at")
 
   user          User            @relation(fields: [userId], references: [id])
   customer      Customer?       @relation(fields: [customerId], references: [id])
@@ -192,9 +214,9 @@ model DressCollection {
   isCollected Boolean  @map("is_collected") @db.Boolean
   userId      String   @map("user_id") @db.VarChar(255)
 
-  user     User     @relation(fields: [userId], references: [id])
-  customer Customer @relation(fields: [customerId], references: [id])
-
+  user      User     @relation(fields: [userId], references: [id])
+  customer  Customer @relation(fields: [customerId], references: [id])
+  addedBy   String?  @map("added_by") @db.VarChar(255)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @map("updated_at")
 
@@ -202,14 +224,14 @@ model DressCollection {
 }
 
 model MaleMeasurement {
-  id          String      @id @default(ulid()) @db.VarChar(255)
-  userId      String      @map("user_id") @db.VarChar(255)
-  name        String      @db.VarChar(255)
-  measureType MeasureType @default(DEFAULT_TYPE) @map("measure_type") // remove default later
-  status      Boolean     @default(false) @map("status")
-  createdAt   DateTime    @default(now()) @map("created_at")
-  updatedAt   DateTime    @default(now()) @map("updated_at")
-
+  id              String        @id @default(ulid()) @db.VarChar(255)
+  userId          String        @map("user_id") @db.VarChar(255)
+  name            String        @db.VarChar(255)
+  measureType     MeasureType   @default(DEFAULT_TYPE) @map("measure_type") // remove default later
+  status          Boolean       @default(false) @map("status")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @default(now()) @map("updated_at")
+  addedBy         String?       @map("added_by") @db.VarChar(255)
   user            User          @relation(fields: [userId], references: [id])
   customerDetails MaleDetails[]
 
@@ -227,6 +249,7 @@ model FemaleMeasurement {
   customerDetails FemaleDetails[]
   createdAt       DateTime        @default(now()) @map("created_at")
   updatedAt       DateTime        @default(now()) @map("updated_at")
+  addedBy         String?         @map("added_by") @db.VarChar(255)
 
   @@map("female_measurements")
 }

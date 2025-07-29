@@ -16,9 +16,10 @@ export const errorMiddleware = (error: Error, req: Request, res: Response, next:
     });
   }
 
-  // logger.error('Unexpected error:', error);
+  logger.error('Unexpected error:', error);
   res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
     status: 'error',
     message: 'Internal server error',
+    error: error
   });
 };

@@ -37,6 +37,8 @@ export class UserService{
         const hashPassword = await bcrypt.hash(user.password, this.SALT_ROUNDS);
         
         user.password = hashPassword;
+        user.addedBy = user.fullName
+        console.log(user)
         const newUser = await this.userService.create(user);
         this.generateOtp(newUser);
         const { password, ...userWithoutPassword } = newUser;

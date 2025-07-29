@@ -3,13 +3,14 @@ import prisma from "@/config/prisma";
 import { AppError } from "@/utils/errors";
 import { FormType } from "@/models/model";
 import { HttpStatus } from "@/utils/constants";
+import { Ds } from "./DefaultService";
 
 export class MaleDetailService{
     
 async save(details: MaleDetails[], method: string, userId: string) {
     try {
         if (method === 'POST') {
-            const user = await prisma.user.findUnique({ where: { id: userId } });
+            const user = await Ds.getUser(userId)
             if (!user) {
                 throw new AppError('User not found', HttpStatus.NOT_FOUND);
             }
@@ -29,6 +30,7 @@ async save(details: MaleDetails[], method: string, userId: string) {
 
             const detailsWithRef = details.map(detail => ({
                 ...detail,
+                addedBy: user.fullName || null,
                 referenceId: saveRef.id
             }));
 
@@ -54,6 +56,7 @@ async save(details: MaleDetails[], method: string, userId: string) {
             throw new AppError('Invalid method. Use POST or PUT.', HttpStatus.BAD_REQUEST);
         }
     } catch (error) {
+        console.log(error)
         throw new AppError(
             error instanceof AppError ? error.message : 'Failed to save details',
             error instanceof AppError ? error.statusCode : HttpStatus.INTERNAL_SERVER_ERROR

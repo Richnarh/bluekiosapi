@@ -99,12 +99,14 @@ export class AuthService{
     const token = crypto.randomBytes(32).toString('hex');
     const hashedToken = await bcrypt.hash(token, this.SALT_ROUNDS);
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    const user = await prisma.user.findUnique({ where: {id: userId }});
     const refreshToken = await this.tokenService.create({
       id: ulid(),
       refreshToken: hashedToken,
       userId,
       expiresAt,
       createdAt: new Date(),
+      addedBy: user?.fullName || null
     });
     logger.info('Refresh token created successfully', { userId, tokenId: refreshToken.id });
     return token;
@@ -199,12 +201,14 @@ export class AuthService{
   async createOtp(userId: string, code: string): Promise<Otp> {
     logger.debug('Creating OTP for user', { userId });
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    const user = await prisma.user.findUnique({ where: {id: userId }});
     const otp = await this.otpService.create({
       id: ulid(),
       code,
       userId,
       expiresAt,
       createdAt: new Date(),
+      addedBy: user?.fullName || null
     });
     logger.info('OTP created successfully', { userId, otpId: otp.id });
     return otp;
