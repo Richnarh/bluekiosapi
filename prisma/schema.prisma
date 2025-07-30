@@ -82,6 +82,7 @@ model User {
   addedBy           String?             @map("added_by") @db.VarChar(255)
   createdAt         DateTime            @default(now()) @map("created_at")
   updatedAt         DateTime            @default(now()) @map("updated_at")
+  payment           PaymentInfo[]
 
   @@map("users")
 }
@@ -124,9 +125,10 @@ model Customer {
 
   user User @relation(fields: [userId], references: [id])
 
-  addedBy   String?  @map("added_by") @db.VarChar(255)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @default(now()) @map("updated_at")
+  addedBy   String?       @map("added_by") @db.VarChar(255)
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @default(now()) @map("updated_at")
+  payment   PaymentInfo[]
 
   @@map("customers")
 }
@@ -201,6 +203,7 @@ model Reference {
   customer      Customer?       @relation(fields: [customerId], references: [id])
   maleDetails   MaleDetails[]
   femaleDetails FemaleDetails[]
+  paymentInfo   PaymentInfo[]
 
   @@map("references")
 }
@@ -252,4 +255,26 @@ model FemaleMeasurement {
   addedBy         String?         @map("added_by") @db.VarChar(255)
 
   @@map("female_measurements")
+}
+
+model PaymentInfo {
+  id             String         @id @default(ulid()) @db.VarChar(255)
+  customerId     String         @map("customer_id") @db.VarChar(255)
+  userId         String         @map("user_id") @db.VarChar(255)
+  referenceId    String         @map("reference_id") @db.VarChar(255)
+  amount         Float          @db.DoublePrecision
+  expectedAmount Float?         @map("expected_amount") @db.DoublePrecision
+  date           DateTime?      @db.Date
+  paymentStatus  PaymentStatus? @map("payment_status")
+  paymentMethod  PaymentMethod? @map("payment_method")
+  description    String?        @db.Text
+
+  user      User      @relation(fields: [userId], references: [id])
+  customer  Customer  @relation(fields: [customerId], references: [id])
+  reference Reference @relation(fields: [referenceId], references: [id])
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @default(now()) @map("updated_at")
+  addedBy   String?   @map("added_by") @db.VarChar(255)
+
+  @@map("payment_infos")
 }

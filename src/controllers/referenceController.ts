@@ -13,7 +13,6 @@ export class ReferenceController{
     async createRef(req: Request, res: Response, next: NextFunction){
         try {
             const ref = req.body as Reference;
-            console.log('ref: ', req.headers['userid']?.toString()!);
             const user = await Ds.getUser(req.headers['userid']?.toString()!);
             let result;
             if(isEmpty(ref.customerId)){
@@ -26,8 +25,9 @@ export class ReferenceController{
                     const payload = {
                         ...reff,
                         description: ref.description,
+                        fabricName: ref.fabricName,
                         completedDate: ref.completedDate ? new Date(ref.completedDate) : null,
-                    }
+                    } as Reference;
                     result = await prisma.reference.update({
                         where: { id: reff.id },
                         data: payload
@@ -38,7 +38,7 @@ export class ReferenceController{
                 result = await prisma.reference.create({ data:ref });
             }
             res.status(ref.id ? HttpStatus.OK : HttpStatus.CREATED).json({
-                message: `${ref.id ? 'Reference updated' : 'Reference added'} successfully.`,
+                message: `${ref.id ? 'Fabric updated' : 'Reference added'} successfully.`,
                 data: result,
             });
         } catch (error) {
@@ -110,6 +110,7 @@ export class ReferenceController{
                 throw new AppError('User not found', HttpStatus.NOT_FOUND);
             }
         } catch (error) {
+            logger.error(error);
             next(error);
         }
     }
