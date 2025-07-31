@@ -32,7 +32,7 @@ export class AuthController{
 
             res.status(HttpStatus.OK).json({
             message: 'Login successful',
-            data: { id: user.id, emailAddress: user.emailAddress, fullName: user.fullName, isVerified: user.isVerified, accessToken,refreshToken } });
+            data: { id: user.id, emailAddress: user.emailAddress, fullName: user.fullName, company: user.companyName, isVerified: user.isVerified, accessToken,refreshToken } });
         } catch (error) {
             next(error);
         }

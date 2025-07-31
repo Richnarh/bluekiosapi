@@ -1,4 +1,4 @@
-import express, { Application } from 'express';
+import express, { Application, NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
@@ -29,8 +29,22 @@ app.use(express.urlencoded({ extended: true }))
 app.use(helmet());
 app.use(cors(corsOptions));
 
-// app.use(`${baseApi}/api-docs`, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-app.use(`${baseApi}/uploads`, express.static(path. join(__dirname, '../public/uploads')));
+// app.use(`${baseApi}/docs`, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+app.use('/uploads/:company', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { company } = req.params;
+    const sanitizedCompany = company.replace(/\s/g, '');
+    req.url = req.path.replace(`/uploads/${sanitizedCompany}`, '');
+    const staticPath = path.join(__dirname, `../public/uploads/${sanitizedCompany}`);
+    express.static(staticPath)(req, res, next);
+  } catch (error) {
+    console.error('Error fetching company:', error);
+    res.status(500).send('Internal server error');
+    next(error);
+  }
+});
+
 
 // Request logging middleware
 app.use((req, res, next) => {

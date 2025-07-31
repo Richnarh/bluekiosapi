@@ -57,14 +57,15 @@ export class CustomerController{
   async uploadImage(req: Request, res: Response, next: NextFunction) {
        try {
         const { id } = req.params;
-        const { userId, customerId } = req.body;
+        const { customerId } = req.body;
+        const userId = req.headers['userid']?.toString();
         if (!req.file) {
           logger.warn('No file uploaded', { userId: id });
           throw new AppError('No file uploaded', HttpStatus.BAD_REQUEST);
         }
 
         // Validate file type and size
-        const allowedTypes = ['image/jpeg', 'image/png'];
+        const allowedTypes = ['image/jpeg', 'image/jpeg', 'image/png'];
         if (!allowedTypes.includes(req.file.mimetype)) {
           logger.warn('Invalid file type', { userId: id, mimetype: req.file.mimetype });
           throw new AppError('Only JPEG or PNG images are allowed', HttpStatus.BAD_REQUEST);

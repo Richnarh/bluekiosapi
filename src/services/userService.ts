@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-
+import * as fs from 'fs';
 import prisma from "@/config/prisma";
 import { User } from '../../generated/prisma';
 import { CrudService } from "./crudservice";
@@ -40,9 +40,19 @@ export class UserService{
         user.addedBy = user.fullName
         console.log(user)
         const newUser = await this.userService.create(user);
+        if(!newUser){
+            throw new AppError('Could not create user', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         this.generateOtp(newUser);
+        this.createPath(newUser);
         const { password, ...userWithoutPassword } = newUser;
         return userWithoutPassword;
+    }
+
+    private createPath(user:User){
+        if(!fs.existsSync(`public/uploads/${user.companyName.replace(/\s/g, "")}`)){
+            fs.mkdirSync(`public/uploads/${user.companyName.replace(/\s/g, "")}`, { recursive: true })
+        }
     }
     
     async generateOtp(user:User){
