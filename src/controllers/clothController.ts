@@ -123,7 +123,6 @@ export class ClothController{
     async delete(req: Request, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;
-            let result;
             if (!id) {
                 throw new AppError('ClothId is required', HttpStatus.BAD_REQUEST);
             }
@@ -144,7 +143,7 @@ export class ClothController{
                         logger.error(err);
                         throw new AppError(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
                     }else{
-                        result = await prisma.clothImage.delete({
+                        await prisma.clothImage.delete({
                             where: { id }
                         });
                     }
