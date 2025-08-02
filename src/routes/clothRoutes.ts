@@ -46,7 +46,7 @@ const upload = multer({
 
 router.post('/', upload.single('file'), controller.create.bind(controller));
 router.put('/', upload.single('file'), controller.create.bind(controller));
-router.get('/:customerId', controller.getImages.bind(controller));
+router.get('/:customerId/:referenceId', controller.getImages.bind(controller));
 router.delete('/:id', controller.delete.bind(controller));
 
 export default router;

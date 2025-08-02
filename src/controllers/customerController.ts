@@ -2,10 +2,8 @@ import prisma from "@/config/prisma";
 import { CustomerService } from "@/services/customerService";
 import { HttpStatus } from "@/utils/constants";
 import { AppError } from "@/utils/errors";
-import { logger } from "@/utils/logger";
 import { NextFunction, Request, Response } from "express"
-import { ClothImage, Customer } from "generated/prisma";
-import { ulid } from "ulid";
+import {Customer } from "generated/prisma";
 
 export class CustomerController{
     private customerService:CustomerService;
@@ -54,47 +52,19 @@ export class CustomerController{
         }
     }
 
-  async uploadImage(req: Request, res: Response, next: NextFunction) {
-       try {
-        const { id } = req.params;
-        const { customerId } = req.body;
-        const userId = req.headers['userid']?.toString();
-        if (!req.file) {
-          logger.warn('No file uploaded', { userId: id });
-          throw new AppError('No file uploaded', HttpStatus.BAD_REQUEST);
+    async deleteImages(req: Request, res: Response, next: NextFunction){
+        try {
+            const { id } = req.params;
+            if(!id){
+                throw new AppError('CustomerId is required', HttpStatus.BAD_REQUEST);
+            }
+            const deletes = await prisma.customer.delete({
+                where: { id }
+            });
+            res.status(HttpStatus.OK).json({ data: deletes, message: 'Customer deleted successfully'});
+        } catch (error) {
+            console.log(error)
+            next(error);
         }
-
-        // Validate file type and size
-        const allowedTypes = ['image/jpeg', 'image/jpeg', 'image/png'];
-        if (!allowedTypes.includes(req.file.mimetype)) {
-          logger.warn('Invalid file type', { userId: id, mimetype: req.file.mimetype });
-          throw new AppError('Only JPEG or PNG images are allowed', HttpStatus.BAD_REQUEST);
-        }
-        const maxSize = 5 * 1024 * 1024; // 5MB
-        if (req.file.size > maxSize) {
-          logger.warn('File size exceeds limit', { userId: id, size: req.file.size });
-          throw new AppError('File size exceeds 5MB limit', HttpStatus.BAD_REQUEST);
-        }
-
-        const payload = {
-            imageUrl: `/uploads/${req.file.filename}`,
-            id: !id == undefined ? ulid() : id,
-            customerId: customerId,
-            userId: userId,
-        } as ClothImage;
-
-        const result = await prisma.clothImage.create({ data: payload })
-        if(!result){
-            throw new AppError('Could not upload image', HttpStatus.BAD_REQUEST);
-        }
-
-        logger.info('Image uploaded successfully', { userId: id, imagePath: payload.imageUrl });
-        res.status(HttpStatus.OK).json({
-          message: 'Image uploaded successfully',
-          result,
-        });
-      } catch (error) {
-        next(error);
-      }
     }
 }

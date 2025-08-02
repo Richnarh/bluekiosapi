@@ -7,7 +7,6 @@ import { HttpStatus } from '@/utils/constants';
 import { AppError } from '@/utils/errors';
 import { logger } from '@/utils/logger';
 import { ClothImage } from 'generated/prisma';
-import { isEmpty } from 'class-validator';
 import path from 'path';
 
 export class ClothController{
@@ -19,13 +18,13 @@ export class ClothController{
         if(!userId){
             throw new AppError('UserId is required in headers', HttpStatus.BAD_REQUEST);
         }
-        if(isEmpty(customerId) || isEmpty(referenceId)){
+        if((!customerId || !referenceId) || referenceId === 'undefined'){
             throw new AppError('CustomerId and ReferenceId is required', HttpStatus.BAD_REQUEST);
         }
         if (!req.file) {
           throw new AppError('No file uploaded', HttpStatus.BAD_REQUEST);
         }
-        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
         if (!allowedTypes.includes(req.file.mimetype)) {
           throw new AppError('Only JPEG, JPG and PNG images are allowed', HttpStatus.BAD_REQUEST);
         }
@@ -94,14 +93,14 @@ export class ClothController{
 
     async getImages(req: Request, res: Response, next: NextFunction){
         try {
-            const { customerId } = req.params; 
+            const { customerId,referenceId } = req.params; 
             const userId = req.headers['userid']?.toString();
             if(!userId){
                 throw new AppError('UserId is required in headers', HttpStatus.BAD_REQUEST);
             }
             const images = await prisma.clothImage.findMany({
                 where: {
-                    customerId, userId,
+                    customerId, referenceId, userId,
                 },
                 select: {
                     id: true,
