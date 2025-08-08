@@ -47,13 +47,39 @@ export class ReferenceController{
         }
     }
 
-    async getReferences(req:Request, res:Response, next:NextFunction){
+    async getReferences(req: Request, res: Response, next: NextFunction){
+        try {
+            const { userId, customerId } = req.params;
+            if(!userId || !customerId){
+                throw new AppError('UserId or CustomerId is required', HttpStatus.BAD_REQUEST);
+            }
+            const references = await prisma.reference.findMany({
+                where: {
+                    AND: [
+                        { customerId },
+                        { userId }
+                    ]
+                },
+                select: {
+                    id:true,
+                    refName: true,
+                    fabricName: true
+                }
+            });
+            res.status(HttpStatus.OK).json({ count: references.length, data:references });
+        } catch (error) {
+            logger.error(error);
+            next(error);
+        }
+    }
+
+    async getReferencesByCustomer(req:Request, res:Response, next:NextFunction){
         try {
             const { customerId } = req.params;
             if(!customerId){
                 throw new AppError('CustomerId is required', HttpStatus.BAD_REQUEST);
             }
-            const userId = req.headers['userId']?.toString();
+            const userId = req.headers['userid']?.toString();
             const references = await prisma.reference.findMany({
                 where: {
                     AND: [
