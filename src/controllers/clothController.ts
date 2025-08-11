@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import * as fs from 'fs';
 import * as fsp from 'fs/promises';
 import prisma from '@/config/prisma';
-import { Ds } from '@/services/DefaultService';
+import { DefaultService as ds } from '@/services/DefaultService';
 import { HttpStatus } from '@/utils/constants';
 import { AppError } from '@/utils/errors';
 import { logger } from '@/utils/logger';
@@ -32,17 +32,21 @@ export class ClothController{
         if (req.file.size > maxSize) {
           throw new AppError('File size exceeds 5MB limit', HttpStatus.BAD_REQUEST);
         }
-        const user = await Ds.getUser(userId);
+        const user = await ds.getUser(userId);
         if(!user){
             throw new AppError('User is required', HttpStatus.BAD_REQUEST);
         }
-        const uploadDir = path.join(`uploads/${user.companyName.replace(/\s/g, "")}`);
+        const company = await ds.getCompany(user.id);
+        if(!company){
+            throw new AppError('Company Name is required', HttpStatus.BAD_REQUEST);
+        }
+        const uploadDir = path.join(`uploads/${company.companyName.replace(/\s/g, "")}`);
         console.log('uploadDir: ', uploadDir)
         if (!fs.existsSync(`public/${uploadDir}`)) {
             throw new AppError('Directory does not exist for upload', HttpStatus.INTERNAL_SERVER_ERROR);
         }
         if(!fs.existsSync(`public/${uploadDir}`)){
-            throw new AppError(`Directory: /uploads/${user.companyName}, does not exist for upload`, HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new AppError(`Directory: /uploads/${company.companyName}, does not exist for upload`, HttpStatus.INTERNAL_SERVER_ERROR);
         }
         if(id){
             const existingImage = await prisma.clothImage.findFirst({

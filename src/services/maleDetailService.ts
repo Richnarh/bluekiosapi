@@ -3,24 +3,27 @@ import prisma from "@/config/prisma";
 import { AppError } from "@/utils/errors";
 import { FormType } from "@/models/model";
 import { HttpStatus } from "@/utils/constants";
-import { Ds } from "./DefaultService";
+import { DefaultService as ds } from "./DefaultService";
 
 export class MaleDetailService{
     
 async save(details: MaleDetails[], method: string, userId: string) {
     try {
         if (method === 'POST') {
-            const user = await Ds.getUser(userId)
+            const user = await ds.getUser(userId)
             if (!user) {
                 throw new AppError('User not found', HttpStatus.NOT_FOUND);
+            }
+            const company = await ds.getCompany(user.id);
+            if (!company) {
+                throw new AppError('Company not found', HttpStatus.NOT_FOUND);
             }
 
             const ref = {
                 userId,
                 refName: FormType.MALE_FORM,
-                description: "",
                 customerId: details[0].customerId,
-                addedBy: `${user.fullName} - ${user.companyName || ""}`
+                addedBy: `${user.fullName} - ${company.companyName || ''}`
             } as Reference;
 
             const saveRef = await prisma.reference.create({ data: ref });
@@ -32,7 +35,7 @@ async save(details: MaleDetails[], method: string, userId: string) {
                 ...detail,
                 addedBy: user.fullName || null,
                 referenceId: saveRef.id
-            }));
+            } as MaleDetails));
 
             const count = await prisma.maleDetails.createMany({ data: detailsWithRef });
             return { count: count.count, referenceId: saveRef.id };
@@ -63,7 +66,6 @@ async save(details: MaleDetails[], method: string, userId: string) {
         );
     }
 }
-
 
 async deleteDetails(referenceId: string, userId: string) {
     try {

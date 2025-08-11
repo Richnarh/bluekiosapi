@@ -1,5 +1,4 @@
 import prisma from "@/config/prisma";
-import { Ds } from "@/services/DefaultService";
 import { HttpStatus } from "@/utils/constants";
 import { AppError } from "@/utils/errors";
 import { logger } from "@/utils/logger";
@@ -15,17 +14,17 @@ export class PaymentController{
             if(isEmpty(payment.customerId)){
                 throw new AppError('CustomerId is required', HttpStatus.BAD_REQUEST);
             }
-            const userId = req.headers['userid']?.toString();
-            if (!userId) {
-                throw new AppError('UserId is required in headers', HttpStatus.BAD_REQUEST);
+            if(isEmpty(payment.userId)){
+                throw new AppError('UserId is required', HttpStatus.BAD_REQUEST);
             }
-            const user = await Ds.getUser(userId);
-            payment.userId = userId;
-            payment.addedBy = user?.fullName || null;
+            if(isEmpty(payment.referenceId)){
+                throw new AppError('ReferenceId is required', HttpStatus.BAD_REQUEST);
+            }
             if (payment.date) {
                 payment.date = new Date(payment.date);
             }
             if(payment.id){
+                payment.updatedAt = new Date();
                 result = await prisma.paymentInfo.update({
                     where: { id: payment.id },
                     data: payment
@@ -61,12 +60,13 @@ export class PaymentController{
 
     async getPaymentsByReference (req: Request, res: Response, next: NextFunction){
         try {
-            const { referenceId } = req.params;  
+            const { referenceId, customerId } = req.params;  
             const userId = req.headers['userid']?.toString();
             const result = await prisma.paymentInfo.findFirst({
                 where: { 
                     AND: [
                         { referenceId },
+                        { customerId },
                         { userId },
                     ]
                 }

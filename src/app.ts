@@ -45,7 +45,6 @@ app.use('/uploads/:company', async (req: Request, res: Response, next: NextFunct
   }
 });
 
-
 // Request logging middleware
 app.use((req, res, next) => {
   logger.info(`${req.method} ${req.url}`);

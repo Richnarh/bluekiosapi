@@ -2,7 +2,7 @@ import { ClothController } from '@/controllers/clothController';
 import express, { Request } from 'express';
 import multer from 'multer';
 import fs from 'fs';
-import { Ds } from '@/services/DefaultService';
+import { DefaultService as ds } from '@/services/DefaultService';
 import { AppError } from '@/utils/errors';
 import { HttpStatus } from '@/utils/constants';
 
@@ -17,11 +17,15 @@ const storage = multer.diskStorage({
     if(!userId){
         throw new AppError('UserId is required in headers', HttpStatus.BAD_REQUEST);
     }
-    const user = await Ds.getUser(userId);
+    const user = await ds.getUser(userId);
      if(!user){
-        throw new AppError('User is required', HttpStatus.INTERNAL_SERVER_ERROR);
+        throw new AppError('User is required', HttpStatus.NOT_FOUND);
     }
-    const imagePath = `public/uploads/${user.companyName.replace(/\s/g, "")}`;
+    const company = await ds.getCompany(user.id);
+     if(!company){
+        throw new AppError('Company is required', HttpStatus.NOT_FOUND);
+    }
+    const imagePath = `public/uploads/${company.companyName.replace(/\s/g, "")}`;
     if (!fs.existsSync(imagePath)) {
       fs.mkdirSync(imagePath, { recursive: true });
     }

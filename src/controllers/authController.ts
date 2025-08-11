@@ -6,6 +6,7 @@ import { AppError } from '@/utils/errors';
 import { LoginRequest } from '@/models/model'
 import prisma from '@/config/prisma';
 import { UserService } from '@/services/userService';
+import { DefaultService as ds } from '@/services/DefaultService';
 
 export class AuthController{
   private auth:AuthService;
@@ -29,10 +30,10 @@ export class AuthController{
                 sameSite: 'strict',
                 maxAge: 7 * 24 * 60 * 60 * 1000
             });
-
+            const company = await ds.getCompany(user.id);
             res.status(HttpStatus.OK).json({
             message: 'Login successful',
-            data: { id: user.id, emailAddress: user.emailAddress, fullName: user.fullName, company: user.companyName, isVerified: user.isVerified, accessToken,refreshToken } });
+            data: { id: user.id, emailAddress: user.emailAddress, fullName: user.fullName, company, isVerified: user.isVerified, accessToken,refreshToken } });
         } catch (error) {
             next(error);
         }
@@ -72,7 +73,7 @@ export class AuthController{
                 throw new AppError('User not found', HttpStatus.NOT_FOUND);
             }
             await this.auth.deleteOtp(code);
-            res.status(HttpStatus.OK).json({ message: 'Account verified successfully', user });
+            res.status(HttpStatus.OK).json({ message: 'Account verified successfully', data: user });
         } catch (error) {
             next(error);
         }

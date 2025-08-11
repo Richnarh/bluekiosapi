@@ -8,6 +8,7 @@ import femaleDetails from './femaleRoutes';
 import ref from './referenceRoutes';
 import payment from './payment.routes';
 import cloths from './clothRoutes';
+import fabrics from './fabricRoutes';
 
 const routes: { [key: string]: Router } = {
   users: userRoutes,
@@ -18,7 +19,8 @@ const routes: { [key: string]: Router } = {
   maleDetails: maleRoutes,
   references: ref,
   payments: payment,
-  clothImages: cloths
+  clothImages: cloths,
+  fabrics: fabrics
 };
 
 export default routes;  

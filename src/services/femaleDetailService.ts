@@ -3,20 +3,26 @@ import prisma from "@/config/prisma";
 import { FormType } from "@/models/model";
 import { AppError } from "@/utils/errors";
 import { HttpStatus } from "@/utils/constants";
-import { Ds } from "./DefaultService";
+import { DefaultService as ds } from "./DefaultService";
 
 export class FemaleDetailService{
 
     async save(details:FemaleDetails[], method:string, userId:string){
         let count;
         if(method === 'POST'){
-            const user = await Ds.getUser(userId);
+            const user = await ds.getUser(userId)
+            if (!user) {
+                throw new AppError('User not found', HttpStatus.NOT_FOUND);
+            }
+            const company = await ds.getCompany(user.id);
+            if (!company) {
+                throw new AppError('Company not found', HttpStatus.NOT_FOUND);
+            }
             const ref = {
                 userId,
                 refName: FormType.FEMALE_FORM,
-                description: "",
                 customerId: details[0].customerId,
-                addedBy: user?.fullName + ' - '+user?.companyName || ""
+                addedBy: user?.fullName + ' - '+company.companyName || ""
             } as Reference;
             const saveRef = await prisma.reference.create({data:ref});
             if(!saveRef){

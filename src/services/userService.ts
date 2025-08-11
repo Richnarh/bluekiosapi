@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
 import * as fs from 'fs';
 import prisma from "@/config/prisma";
-import { User } from '../../generated/prisma';
+import { Company, User } from '../../generated/prisma';
 import { CrudService } from "./crudservice";
 import { plainToInstance } from 'class-transformer';
 import { UserValidator } from '@/utils/validators';
@@ -15,60 +15,73 @@ import { AuthService } from './authService';
 export class UserService{
     private SALT_ROUNDS = 10;
     private emailService:EmailService;
-    private userService:CrudService<User>;
+    private crudUser:CrudService<User>;
     private authService:AuthService;
     
     constructor(){
-        this.userService = new CrudService<User>(prisma.user);
+        this.crudUser = new CrudService<User>(prisma.user);
         this.authService = new AuthService();
         this.emailService = new EmailService();
     }
 
-    async addUser(user:User):Promise<Omit<User, 'password' | 'createdAt' | 'updatedAt'>>{
-        const userDto = plainToInstance(UserValidator, user);
-        const errors = await validate(userDto);
-        if (errors.length > 0) {
-            const errorMessages = errors
-            .map(err => Object.values(err.constraints || {}).join(', '))
-            .join('; ');
-            logger.warn({ errors: errorMessages });
-            throw new AppError(`${errorMessages}`, HttpStatus.BAD_REQUEST);
-        }
+    async addUser(user:User, company:string):Promise<Omit<User, 'password' | 'createdAt' | 'updatedAt'>>{
         const hashPassword = await bcrypt.hash(user.password, this.SALT_ROUNDS);
+
+        console.log('user: ', user);
         
         user.password = hashPassword;
-        user.addedBy = user.fullName
-        console.log(user)
-        const newUser = await this.userService.create(user);
+        user.addedBy = user.fullName;
+        user.updatedAt = new Date();
+        const newUser = await this.crudUser.create(user);
         if(!newUser){
             throw new AppError('Could not create user', HttpStatus.INTERNAL_SERVER_ERROR);
         }
+        this.createCompany(newUser, company);
+        this.createPath(company);
         this.generateOtp(newUser);
-        this.createPath(newUser);
         const { password, ...userWithoutPassword } = newUser;
         return userWithoutPassword;
     }
 
-    private createPath(user:User){
-        if(!fs.existsSync(`public/uploads/${user.companyName.replace(/\s/g, "")}`)){
-            fs.mkdirSync(`public/uploads/${user.companyName.replace(/\s/g, "")}`, { recursive: true })
+    private async createPath(company:string){
+        if(!fs.existsSync(`public/uploads/${company.replace(/\s/g, "")}`)){
+            fs.mkdirSync(`public/uploads/${company.replace(/\s/g, "")}`, { recursive: true })
         }
     }
     
-    async generateOtp(user:User){
+    public generateOtp = async(user:User) => {
       const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
       await this.authService.createOtp(user.id, otpCode);
-      await this.emailService.sendOtpEmail(user.emailAddress, otpCode);
+      if(user.emailAddress){
+          await this.emailService.sendOtpEmail(user.emailAddress, otpCode);
+      }
+      if(user.phoneNumber){
+        // await this.smsService.sendSms(user.phoneNumber, otpCode);
+      }
+    }
+    
+    private createCompany = async (user:User, companyName:string) => {
+        try {
+            const company = {
+                companyName,
+                addedBy: user.fullName,
+                userId: user.id,
+                updatedAt: new Date(),
+            } as Company;
+            await prisma.company.create({ data: company });
+        } catch (error) {
+            throw new AppError('Could not create company', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     async getUsers(): Promise<Omit<User, 'password'>[]> {
-        const users = await this.userService.findMany();
+        const users = await this.crudUser.findMany();
         const newUsers = users.map(({ password, ...user }) => user);
         return newUsers;
     }
 
     async getUserById(id: string): Promise<Omit<User, 'password'> | null> {
-        const u = await this.userService.findUnique(id);
+        const u = await this.crudUser.findUnique(id);
         let user = null;
         if (u) {
             const { password, ...newUser } = u;
@@ -77,7 +90,6 @@ export class UserService{
         } else {
             logger.warn('User not found', { id });
         }
-        
         return user;
     }
 
@@ -96,12 +108,12 @@ export class UserService{
         updateData.password = await bcrypt.hash(data.password, this.SALT_ROUNDS);
         logger.debug('Password hashed successfully for user update', { id });
         }
-        return this.userService.update(id, updateData);
+        return this.crudUser.update(id, updateData);
     }
 
     async deleteUser(id: string): Promise<User | null> {
         logger.debug('Deleting user', { id });
-        const user = await this.userService.delete(id);
+        const user = await this.crudUser.delete(id);
         if (user) {
             logger.info('User deleted successfully', { id });
         } else {
@@ -109,15 +121,5 @@ export class UserService{
         }
         return user;
     }
-
-    async updateUserImage(id: string, imagePath: string): Promise<User | null> {
-        logger.debug('Updating user image', { id, imagePath });
-        const user = await this.userService.update(id, { imagePath });
-        if (user) {
-            logger.info('User image updated successfully', { id });
-        } else {
-            logger.warn('User not found for image update', { id });
-        }
-        return user;
-    }
+    
 }   
