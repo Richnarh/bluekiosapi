@@ -58,8 +58,9 @@ export class ReferenceController{
                     id:true,
                     refName: true,
                     fabric: {
-                        include: { 
-                            
+                        select: { 
+                            id: true, 
+                            fabricName: true 
                         }
                     }
                 },
