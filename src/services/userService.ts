@@ -11,6 +11,7 @@ import { AppError } from "@/utils/errors";
 import { HttpStatus } from "@/utils/constants";
 import { EmailService } from "./emailService";
 import { AuthService } from './authService';
+import { SmsService } from './smsService';
 
 export class UserService{
     private SALT_ROUNDS = 10;
@@ -56,7 +57,7 @@ export class UserService{
           await this.emailService.sendOtpEmail(user.emailAddress, otpCode);
       }
       if(user.phoneNumber){
-        // await this.smsService.sendSms(user.phoneNumber, otpCode);
+        await SmsService.sendOtpSms(user.phoneNumber, otpCode);
       }
     }
     

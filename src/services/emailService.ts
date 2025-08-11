@@ -24,7 +24,6 @@ export class EmailService {
 
   async sendOtpEmail(to: string, otp: string): Promise<void> {
     try {
-      logger.debug('Sending OTP email', { to, otp });
       await this.transporter.sendMail({
         from: `"Your App" <${process.env.EMAIL_USER}>`,
         to,
