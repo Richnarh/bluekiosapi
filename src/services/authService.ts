@@ -10,7 +10,7 @@ import { logger } from '@/utils/logger';
 import { CrudService } from './crudservice';
 import { plainToInstance } from 'class-transformer';
 import { isEmpty, validate } from 'class-validator';
-import { LoginUserValidator, RefreshTokenValidator, VerifyOtpValidator } from '@/utils/validators';
+import { LoginUserValidator, VerifyOtpValidator } from '@/utils/validators';
 import { DefaultService as ds } from './DefaultService';
 
 export class AuthService{

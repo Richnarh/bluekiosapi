@@ -17,8 +17,11 @@ export class FemaleDetailController {
             if (!Array.isArray(details) || details.length === 0) {
                 throw new AppError('Invalid input data', HttpStatus.BAD_REQUEST);
             }
-            const userId = req.headers['userid']?.toString();
-            const count = this.femaleService.save(details,req.method,userId!);
+            const { userId } = req.params;
+            if (!userId) {
+                throw new AppError('UserId is required', HttpStatus.BAD_REQUEST);
+            }
+            const count = this.femaleService.save(details,req.method,userId);
             res.status(HttpStatus.CREATED).json({ message: `Record added successfully.`, data: count });
         } catch (error) {
             next(error);

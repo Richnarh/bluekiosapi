@@ -18,7 +18,10 @@ export class MaleDetailController {
             if (!Array.isArray(details) || details.length === 0) {
                 throw new AppError('Invalid input data', HttpStatus.BAD_REQUEST);
             }
-            const userId = req.headers['userid']?.toString();
+            const { userId } = req.params;
+            if (!userId) {
+                throw new AppError('UserId is required', HttpStatus.BAD_REQUEST);
+            }
             const count = this.maleService.save(details,req.method,userId!);
             res.status(HttpStatus.CREATED).json({ message: `Action applied successfully.`, data: count });
         } catch (error) {
