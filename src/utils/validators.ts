@@ -1,125 +1,109 @@
 import { IsEmail, IsNotEmpty, Length, Matches, MinLength, registerDecorator, ValidationArguments, ValidationOptions, ValidatorConstraint, ValidatorConstraintInterface } from 'class-validator';
 import prisma from '@/config/prisma';
 
-  @ValidatorConstraint({ async: true })
-  export class IsEmailUniqueConstraint implements ValidatorConstraintInterface {
-    async validate(email: string, args: ValidationArguments) {
-      const user = await prisma.user.findUnique({
-        where: {
-          emailAddress: email
-        }
-      });
-      return !user;
-    }
-    defaultMessage(args: ValidationArguments) {
-      return `Email ${args.value} already exists`;
-    }
+@ValidatorConstraint({ async: true })
+export class IsUniqueConstraint implements ValidatorConstraintInterface {
+  async validate(value: string, args: ValidationArguments) {
+    const [prismaField] = args.constraints as [string, string];
+    const user = await prisma.user.findFirst({
+      where: { [prismaField]: value },
+    });
+    return !user;
   }
 
-  export function IsEmailUnique(validationOptions?: ValidationOptions) {
-    return function (object: Object, propertyName: string) {
+  defaultMessage(args: ValidationArguments) {
+    const [, displayName] = args.constraints as [string, string];
+    return `${displayName} ${args.value} already exists`;
+  }
+}
+
+ const createUniqueDecorator = (prismaField: string, displayName: string) => {
+  return function (validationOptions?: ValidationOptions) {
+    return function (object: any, propertyName: string) {
       registerDecorator({
         target: object.constructor,
-        propertyName: propertyName,
+        propertyName,
         options: validationOptions,
-        constraints: [],
-        validator: IsEmailUniqueConstraint,
+        constraints: [prismaField, displayName],
+        validator: IsUniqueConstraint,
       });
     };
-  }
+  };
+}
 
-   @ValidatorConstraint({ async: true })
-   export class IsPhoneUniqueConstraint implements ValidatorConstraintInterface {
-     async validate(phoneNumber: string, args: ValidationArguments) {
-       const user = await prisma.user.findUnique({
-         where: { phoneNumber },
-       });
-       return !user;
-     }
-
-     defaultMessage(args: ValidationArguments) {
-       return `Phone number ${args.value} already exists`;
-     }
-   }
-
-   export function IsPhoneUnique(validationOptions?: ValidationOptions) {
-     return function (object: Object, propertyName: string) {
-       registerDecorator({
-         target: object.constructor,
-         propertyName: propertyName,
-         options: validationOptions,
-         constraints: [],
-         validator: IsPhoneUniqueConstraint,
-       });
-     };
-   }
+export const IsEmailUnique = createUniqueDecorator('emailAddress', 'Email');
+export const IsUsernameUnique = createUniqueDecorator('username', 'Username');
+export const IsPhoneUnique = createUniqueDecorator('phoneNumber', 'Phone number');
 
 export class UserValidator {
-  @IsEmail({}, { message: 'Invalid email format' })
   @IsEmailUnique()
   emailAddress: string | undefined;
 
   @IsNotEmpty({ message: 'Name is required' })
-  fullName?: string;
+  fullName: string | undefined;
+
+  @IsNotEmpty({ message: 'Username is required' })
+  @IsUsernameUnique()
+  username: string | undefined;
 
   @IsNotEmpty({ message: 'Phone number is required' })
   @IsPhoneUnique()
   @Matches(/^(?:(?:\+233)|0)(?:[2357]\d{8}|[23][2-9]\d{7})$/, { message: 'Invalid phone number format' })
-  phoneNumber?: string;
+  phoneNumber: string | undefined;
 
   @IsNotEmpty({ message: 'Password is required' })
   @MinLength(8, { message: 'Password must be at least 8 characters long' })
   @Matches(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, {
     message: '1. Password must contain at least one uppercase letter 2. Password must contain at least one lowercase letter 3. Password must contain at least one number 4. Password must contain at least one special character',
   })
-  password?: string;
+  password: string | undefined;
 }
 
 export class VerifyOtpValidator {
   @IsNotEmpty({ message: 'User ID is required' })
-  userId?: string;
+  userId: string | undefined;
 
   @IsNotEmpty({ message: 'OTP code is required' })
   @Length(6, 6, { message: 'OTP code must be 6 digits' })
-  code?: string;
+  code: string | undefined;
 }
 
 export class LoginUserValidator {
-  @IsNotEmpty({ message: 'Email/Phone is required' })
-  emailPhone?: string;
+  @IsNotEmpty({ message: 'Username is required' })
+  username: string | undefined;
 
   @IsNotEmpty({ message: 'Password is required' })
-  password?: string;
+  password: string | undefined;
 }
 
 export class RefreshTokenValidator {
   @IsNotEmpty({ message: 'Refresh token is required' })
-  refreshToken?: string;
+  refreshToken: string | undefined;
 }
 
 export class CustomerValidator{
   @IsNotEmpty({ message: 'Name is required' })
-  fullName?: string;
+  fullName: string | undefined;
 
   @IsNotEmpty({ message: 'Phone Number is required' })
-  phoneNumber?: string;
+  phoneNumber: string | undefined;
 
   @IsNotEmpty({ message: 'UserId is required' })
-  userId?: string;
+  userId: string | undefined;
 }
 
 export class MeasurementValidator{
   @IsNotEmpty({ message: 'Name is required'})
-  name?: string;
+  name: string | undefined;
   
   @IsNotEmpty({ message: 'UserId is required'})
-  userId?: string;
+  userId: string | undefined;
 }
 
 export class CustomerDetailsValidator {
   @IsNotEmpty({ message: 'Customer ID is required' })
-  customerId?: string;
+  customerId: string | undefined;
 
   @IsNotEmpty({ message: 'User ID is required' })
-  userId?: string;
+  userId: string | undefined;
 }

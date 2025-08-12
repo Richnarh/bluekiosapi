@@ -7,6 +7,8 @@ import { LoginRequest } from '@/models/model'
 import prisma from '@/config/prisma';
 import { UserService } from '@/services/userService';
 import { DefaultService as ds } from '@/services/DefaultService';
+import { isEmpty } from 'class-validator';
+import { logger } from '@/utils/logger';
 
 export class AuthController{
   private auth:AuthService;
@@ -20,8 +22,7 @@ export class AuthController{
     async loginUser(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const request  = req.body as LoginRequest;
-            const { emailPhone, password } = request;
-            const loginReq = { emailPhone: emailPhone, password: password }
+            const loginReq = { username: request.username, password: request.password }
             const { user, accessToken, refreshToken } = await this.auth.loginUser(loginReq);
 
             res.cookie('refreshToken', refreshToken, {
@@ -31,28 +32,43 @@ export class AuthController{
                 maxAge: 7 * 24 * 60 * 60 * 1000
             });
             const company = await ds.getCompany(user.id);
+            const { password, ...restUser } = user;
+            const response = {  ...restUser, company };
             res.status(HttpStatus.OK).json({
-            message: 'Login successful',
-            data: { id: user.id, emailAddress: user.emailAddress, fullName: user.fullName, company, isVerified: user.isVerified, accessToken,refreshToken } });
+                message: 'Login successful',
+                data: {accessToken,refreshToken, user:response } }
+            );
         } catch (error) {
+            logger.error(error);
             next(error);
         }
     }
 
     async refreshToken(req: Request, res: Response, next: NextFunction) {
         try {
-        const { token } = req.cookies;
+        const token = req.cookies.refreshToken;
+        if(!token){
+            throw new AppError('No refresh token provided', HttpStatus.UNAUTHORIZED);
+        }
         const { accessToken, refreshToken } = await this.auth.refreshAccessToken(token);
         res.status(HttpStatus.OK).json({ message: 'Token refreshed successfully', accessToken, refreshToken});
         } catch (error) {
-        next(error);
+            logger.error(error);
+            next(error);
         }
     }
 
     async logoutUser(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
         try {
             const refreshToken = req.cookies.refreshToken;
-            await this.auth.logoutUser(refreshToken);
+            const { userId } = req.params;
+            if (isEmpty(refreshToken)) {
+                throw new AppError(`Refresh token is required`, HttpStatus.BAD_REQUEST);
+            }
+            if (isEmpty(userId) || userId === 'undefined') {
+                throw new AppError(`UserId is required`, HttpStatus.BAD_REQUEST);
+            }
+            await this.auth.logoutUser(refreshToken,userId);
             res.clearCookie('refreshToken', {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
@@ -73,7 +89,9 @@ export class AuthController{
                 throw new AppError('User not found', HttpStatus.NOT_FOUND);
             }
             await this.auth.deleteOtp(code);
-            res.status(HttpStatus.OK).json({ message: 'Account verified successfully', data: user });
+            const company = ds.getCompany(user.id);
+            const response = { ...user, company };
+            res.status(HttpStatus.OK).json({ message: 'Account verified successfully', data: response });
         } catch (error) {
             next(error);
         }

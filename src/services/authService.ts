@@ -11,6 +11,7 @@ import { CrudService } from './crudservice';
 import { plainToInstance } from 'class-transformer';
 import { isEmpty, validate } from 'class-validator';
 import { LoginUserValidator, RefreshTokenValidator, VerifyOtpValidator } from '@/utils/validators';
+import { DefaultService as ds } from './DefaultService';
 
 export class AuthService{
   private SALT_ROUNDS = 10;
@@ -23,7 +24,7 @@ export class AuthService{
     this.tokenService = new CrudService<RefreshToken>(prisma.refreshToken);
     this.userService = new CrudService<User>(prisma.user);
   }
-    async loginUser(loginReq:{emailPhone: string, password: string}): Promise<{ user: User; accessToken: string; refreshToken: string }> {
+    async loginUser(loginReq:{username: string, password: string}): Promise<{ user: User; accessToken: string; refreshToken: string }> {
         const loginDto = plainToInstance(LoginUserValidator, loginReq);
         const errors = await validate(loginDto);
 
@@ -35,26 +36,20 @@ export class AuthService{
             throw new AppError(`Validation failed: ${errorMessages}`, HttpStatus.BAD_REQUEST);
         }
 
-        const  { emailPhone, password } = loginReq;
+        const  { username, password } = loginReq;
         
-      const users = await prisma.user.findMany({ 
-        where: {
-          OR: [
-            { emailAddress: emailPhone },
-            { phoneNumber: emailPhone }
-          ]
-        }
+      const user = await prisma.user.findFirst({ 
+        where: { username: username }
       });
-      if (!users || users.length === 0) {
+      if (!user) {
         throw new AppError('Invalid credentials', HttpStatus.BAD_REQUEST);
       }
-      const user = users[0];
       if (!user.isVerified) {
-        throw new AppError('Please verify your email before logging in', HttpStatus.BAD_REQUEST);
+        throw new AppError('Please verify your account before logging in', HttpStatus.BAD_REQUEST);
       }
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
-        throw new AppError('Invalid email or password', HttpStatus.BAD_REQUEST);
+        throw new AppError('Invalid username or password', HttpStatus.BAD_REQUEST);
       }
       if (!process.env.JWT_SECRET) {
         throw new AppError('Server configuration error', HttpStatus.INTERNAL_SERVER_ERROR);
@@ -71,16 +66,6 @@ export class AuthService{
     }
   
     async refreshAccessToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
-        const refreshDto = plainToInstance(RefreshTokenValidator, refreshToken);
-        const errors = await validate(refreshDto);
-        
-        if (errors.length > 0) {
-            const errorMessages = errors
-            .map(err => Object.values(err.constraints || {}).join(', '))
-            .join('; ');
-            logger.warn('No refresh token provided', { errors: errorMessages });
-            throw new AppError(`No refresh token provided: ${errorMessages}`, HttpStatus.UNAUTHORIZED);
-        }
       const tokenRecord = await this.verifyRefreshToken(refreshToken);
       const user = await this.userService.findUnique(tokenRecord.userId);
       if (!user) {
@@ -132,56 +117,42 @@ export class AuthService{
     return tokenRecord;
   }
 
-  async findRefreshToken(token: string): Promise<RefreshToken | null> {
-    logger.debug('Finding refresh token');
+  async findRefreshToken(token: string,userId:string): Promise<RefreshToken | null> {
     const tokenRecord = await prisma.refreshToken.findFirst({
       where: {
+        userId: userId,
         expiresAt: { gte: new Date() },
       },
     });
-    if (!tokenRecord) {
-      return null;
-    }
+    if (!tokenRecord) return null;
     const isMatch = await bcrypt.compare(token, tokenRecord.refreshToken);
     return isMatch ? tokenRecord : null;
   }
 
-  async deleteRefreshToken(id: string): Promise<void> {
-    logger.debug('Deleting refresh token', { id });
+  deleteRefreshToken = async (id: string) => {
     await this.tokenService.delete(id);
     logger.info('Refresh token deleted successfully', { id });
   }
 
-  async logoutUser(refreshToken: string): Promise<void> {
-        const refreshDto = plainToInstance(RefreshTokenValidator, refreshToken);
-        const errors = await validate(refreshDto);
-      
-        if (errors.length > 0) {
-            const errorMessages = errors
-            .map(err => Object.values(err.constraints || {}).join(', '))
-            .join('; ');
-            logger.warn('Validation failed for logoutUser', { errors: errorMessages });
-            throw new AppError(`Validation failed: ${errorMessages}`, HttpStatus.BAD_REQUEST);
-        }
-        const tokenRecord = await this.findRefreshToken(refreshToken);
-        if (tokenRecord) {
-            await this.deleteRefreshToken(tokenRecord.id);
-            logger.info('User logged out successfully', { userId: tokenRecord.userId });
-        } else {
-            logger.warn('Refresh token not found for logout');
-        }
+  logoutUser = async (refreshToken: string, userId:string) => {
+    console.log('refreshToken: ', refreshToken)
+    console.log('userId: ', userId)
+    const tokenRecord = await this.findRefreshToken(refreshToken,userId);
+    console.log('tokenRecord: ', tokenRecord)
+    if (tokenRecord) {
+        await this.deleteRefreshToken(tokenRecord.id);
+        logger.info('User logged out successfully', { userId: tokenRecord.userId });
+    } else {
+        throw new AppError('Refresh token not found for logout', HttpStatus.NOT_FOUND);
+    }
   }
 
-  async verifyPassword(id: string, password: string): Promise<boolean> {
-      logger.debug('Verifying password for user', { id });
+  verifyPassword = async(id: string, password: string): Promise<boolean> => {
       const user = await this.userService.findUnique(id);
       if (!user) {
-        logger.warn('User not found for password verification', { id });
-        return false;
+        throw new AppError('User not found for password verification', HttpStatus.NOT_FOUND);
       }
-      const isMatch = await bcrypt.compare(password, user.password);
-      logger.info('Password verification completed', { id, isMatch });
-      return isMatch;
+      return await bcrypt.compare(password, user.password);
     }
 
   async verifyUser(id: string): Promise<Omit<User, 'password' | 'createdAt' | 'updatedAt'> | null> {
@@ -201,14 +172,15 @@ export class AuthService{
   async createOtp(userId: string, code: string): Promise<Otp> {
     logger.debug('Creating OTP for user', { userId });
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-    const user = await prisma.user.findUnique({ where: {id: userId }});
+    const user = await ds.getUser(userId);
+    const company = await ds.getCompany(userId);
     const otp = await this.otpService.create({
       id: ulid(),
       code,
       userId,
       expiresAt,
       createdAt: new Date(),
-      addedBy: user?.fullName || null
+      addedBy: user?.fullName +' '+company?.companyName || null
     });
     logger.info('OTP created successfully', { userId, otpId: otp.id });
     return otp;
