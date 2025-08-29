@@ -1,71 +1,166 @@
-import { FemaleDetails, Reference } from "generated/prisma";
-import prisma from "@/config/prisma";
-import { FormType } from "@/models/model";
-import { AppError } from "@/utils/errors";
-import { HttpStatus } from "@/utils/constants";
-import { DefaultService as ds } from "./DefaultService";
+import { DataSource, Repository } from 'typeorm';
+import { FormType } from "../models/model.js";
+import { HttpStatus } from '../utils/constants.js';
+import { AppError } from '../utils/errors.js';
+import { logger } from '../utils/logger.js';
+import { FemaleDetails } from '../entities/FemaleDetails.js';
+import { DefaultService } from './DefaultService.js';
+import { Reference } from '../entities/Reference.js';
+import { Customer } from '../entities/Customer.js';
 
 export class FemaleDetailService{
+    private readonly femaleDetailsRepository:Repository<FemaleDetails>;
+    private readonly referenceRepository:Repository<Reference>;
+    private readonly customerRepository:Repository<Customer>;
+    private readonly ds:DefaultService;
 
-    async save(details:FemaleDetails[], method:string, userId:string){
-        let count;
-        if(method === 'POST'){
-            const user = await ds.getUser(userId)
+    constructor(dataSource:DataSource){
+        this.femaleDetailsRepository = dataSource.getRepository(FemaleDetails);
+        this.customerRepository = dataSource.getRepository(Customer);
+        this.referenceRepository = dataSource.getRepository(Reference);
+        this.ds = new DefaultService(dataSource);
+    }
+
+    async save(details:FemaleDetails[], method:string, userId:string, customerId:string){
+        if (!details.length) {
+            throw new AppError('Details array cannot be empty', HttpStatus.BAD_REQUEST);
+        }
+        if (method === 'POST') {
+            const user = await this.ds.getUserById(userId);
             if (!user) {
                 throw new AppError('User not found', HttpStatus.NOT_FOUND);
             }
-            const company = await ds.getCompany(user.id);
+            const company = await this.ds.getCompanyByUser(user.id);
             if (!company) {
                 throw new AppError('Company not found', HttpStatus.NOT_FOUND);
             }
-            const ref = {
-                userId,
-                refName: FormType.FEMALE_FORM,
-                customerId: details[0].customerId,
-                addedBy: user?.fullName + ' - '+company.companyName || ""
-            } as Reference;
-            const saveRef = await prisma.reference.create({data:ref});
-            if(!saveRef){
-                throw new AppError('RefErr', HttpStatus.INTERNAL_SERVER_ERROR);
+            const customer = await this.customerRepository.findOne({ where: { id: customerId } });
+            if (!customer) {
+                throw new AppError('Customer not found', HttpStatus.NOT_FOUND);
             }
-            details.forEach(detail => {
-                detail.referenceId = saveRef.id;
-            });
-            count = await prisma.femaleDetails.createMany({ data: details });
-        }else if(method === 'PUT'){
-            count = await prisma.femaleDetails.updateMany({ 
+
+            const ref = {
+                user,
+                customer,
+                refName: FormType.FEMALE_FORM,
+                addedBy: `${user.fullName} - ${company.companyName}`,
+            } as Reference;
+
+            const saveRef = await this.referenceRepository.save(ref);
+            if (!saveRef) {
+                throw new AppError('Failed to create reference', HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
+            const detailsWithRef = details.map((detail) => ({
+                ...detail,
+                reference: saveRef,
+                user,
+                customer,
+            }));
+
+            await this.femaleDetailsRepository.save(detailsWithRef);
+            return detailsWithRef.length;
+        } else if (method === 'PUT') {
+            let updatedCount = 0;
+            for (const detail of details) {
+                const existingDetail = await this.femaleDetailsRepository.findOne({
+                    where: { 
+                        id: detail.id, 
+                        user: { id: userId }, 
+                        customer: { id: customerId } 
+                    },
+                });
+                if (existingDetail) {
+                    await this.femaleDetailsRepository.update(
+                        { 
+                            id: detail.id, 
+                            user: { id: userId }, 
+                            customer: { id: customerId } 
+                        },
+                        { 
+                            ...detail, 
+                            user: { id: userId}, 
+                            customer: { id: customerId } 
+                        },
+                    );
+                    updatedCount++;
+                }
+            }
+            if (updatedCount === 0) {
+                throw new AppError('No details updated', HttpStatus.NOT_FOUND);
+            }
+            return updatedCount;
+        } else {
+            throw new AppError('Invalid method. Use POST or PUT', HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    async getAllDetails(customerId: string, userId: string){
+        try {
+            if (!customerId) {
+                throw new AppError('Reference ID is required', HttpStatus.BAD_REQUEST);
+            }
+            if (!userId) {
+                throw new AppError('User ID is required', HttpStatus.BAD_REQUEST);
+            }
+
+            const details = await this.femaleDetailsRepository.find({
                 where: { 
-                    AND: [
-                        { userId },
-                        { customerId: details[0].customerId }
-                    ] 
+                    customer: { id: customerId },
+                    user: { id: userId }
                 },
-                data: details
+                select: ['id', 'user', 'customer', 'reference', 'measuredValue','addedBy'],
+                relations: ['femaleMeasurement','customer','reference'],
+                relationLoadStrategy: 'query',
+                loadEagerRelations: false,
             });
+
+            return details.map(detail => ({
+                ...detail,
+                femaleMeasurement: detail.femaleMeasurement
+                    ? { id: detail.femaleMeasurement.id, name: detail.femaleMeasurement.name }
+                    : null,
+            }));
+        } catch (error) {
+            logger.error('Failed to fetch female details', { error, customerId, userId });
+            throw error instanceof AppError
+                ? error
+                : new AppError('Failed to fetch details', HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
     
-async deleteDetails(referenceId: string, userId: string) {
-    try {
-        const deleteResult = await prisma.femaleDetails.deleteMany({
-            where: {
-                AND: [
-                    { userId },
-                    { referenceId }
-                ]
+    async deleteDetails(referenceId: string, userId: string): Promise<number> {
+        try {
+            if (!referenceId) {
+                throw new AppError('Reference ID is required', HttpStatus.BAD_REQUEST);
             }
-        });
-        const remainingDetails = await prisma.femaleDetails.count({ where: { referenceId } });
-        if (remainingDetails === 0) {
-            await prisma.reference.delete({ where: { id: referenceId } });
-        }
-        return deleteResult.count;
-    } catch (error) {
-        throw new AppError(
-            error instanceof AppError ? error.message : 'Failed to delete details',
-            error instanceof AppError ? error.statusCode : HttpStatus.INTERNAL_SERVER_ERROR
-        );
-    }
-}
+            if (!userId) {
+                throw new AppError('User ID is required', HttpStatus.BAD_REQUEST);
+            }
 
+            const deleteResult = await this.femaleDetailsRepository.delete({
+                user: { id: userId },
+                reference: { id: referenceId },
+            });
+
+            const remainingDetails = await this.femaleDetailsRepository.count({
+                where: { reference: { id: referenceId } },
+            });
+
+            if (remainingDetails === 0) {
+                const referenceDeleteResult = await this.referenceRepository.delete({
+                    id: referenceId,
+                });
+                if (referenceDeleteResult.affected === 0) {
+                    logger.warn('Reference not found for deletion', { referenceId });
+                }
+            }
+            return deleteResult.affected || 0;
+        } catch (error) {
+            logger.error('Failed to delete female details', { error, referenceId, userId });
+            throw error instanceof AppError
+                ? error
+                : new AppError('Failed to delete details', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

@@ -1,16 +1,20 @@
-import prisma from "@/config/prisma";
-import { HttpStatus } from "@/utils/constants";
-import { AppError } from "@/utils/errors";
-import { logger } from "@/utils/logger";
-import { isEmpty } from "class-validator";
 import { NextFunction, Request, Response } from "express"
-import { Fabric } from "generated/prisma";
+import { HttpStatus } from "../utils/constants.js";
+import { AppError } from "../utils/errors.js";
+import { logger } from "../utils/logger.js";
+import { isEmpty } from "class-validator";
+import { DataSource, Repository } from "typeorm";
+import { Fabric } from "../entities/Fabric.js";
 
 export class FabricController{
+    private readonly fabricRepository:Repository<Fabric>;
+    constructor(datasource:DataSource){
+        this.fabricRepository = datasource.getRepository(Fabric);
+    }
     
     async create(req:Request, res:Response, next:NextFunction){
         try {
-            const fabric = req.body as Fabric;
+            const fabric = req.body;
             let result;
             if(isEmpty(fabric.customerId)){
                 throw new AppError('CustomerId is required', HttpStatus.BAD_REQUEST);
@@ -25,13 +29,9 @@ export class FabricController{
                 fabric.completedDate = new Date(fabric.completedDate);
             }
             if(!fabric.id){
-                result = await prisma.fabric.create({ data: fabric });
+                result = await this.fabricRepository.save(fabric);
             }else{
-                fabric.updatedAt = new Date();
-                result = await prisma.fabric.update({
-                    where: { id :  fabric.id },
-                    data: fabric
-                })
+                result = await this.fabricRepository.save(fabric)
             }
             res.status(fabric.id ? HttpStatus.OK : HttpStatus.CREATED).json({
                 message: `${fabric.fabricName} ${fabric.id ? 'updated' : 'added'} successfully.`,
@@ -46,7 +46,11 @@ export class FabricController{
     async getAllFabric(req:Request, res:Response, next:NextFunction){
         try {
             const userId = req.headers['userid']?.toString();
-            const result = await prisma.customer.findMany({ where: { userId } })
+            const result = await this.fabricRepository.find({ 
+                where: { 
+                    user: { id: userId }
+                } 
+            })
             res.status(HttpStatus.OK).json({
                 count: result.length,
                 data: result
@@ -60,7 +64,7 @@ export class FabricController{
     async getFabricById(req:Request, res:Response, next:NextFunction){
         try {
             const { id } = req.params;
-            const fabric = await prisma.fabric.findUnique({ where: { id }});
+            const fabric = await this.fabricRepository.findOneBy({ id });
             res.status(HttpStatus.OK).json({ data:fabric});
         } catch (error) {
             logger.error(error);
@@ -71,8 +75,11 @@ export class FabricController{
     async getFabricsByRef(req:Request, res:Response, next:NextFunction){
         try {
             const { referenceId,customerId } = req.params;
-            const fabric = await prisma.fabric.findFirst({ 
-                where: { referenceId, customerId }
+            const fabric = await this.fabricRepository.findOne({ 
+                where: { 
+                    reference: { id: referenceId }, 
+                    customer: { id: customerId }
+                }
             });
             res.status(HttpStatus.OK).json({ data:fabric });
         } catch (error) {
@@ -87,9 +94,7 @@ export class FabricController{
             if(!id){
                 throw new AppError('Fabric is required', HttpStatus.BAD_REQUEST);
             }
-            const deletes = await prisma.fabric.delete({
-                where: { id }
-            });
+            const deletes = await this.fabricRepository.delete(id);
             res.status(HttpStatus.OK).json({ data: deletes, message: 'Fabric deleted successfully'});
         } catch (error) {
             logger.error(error);

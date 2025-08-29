@@ -1,97 +1,70 @@
 import bcrypt from 'bcrypt';
-import * as fs from 'fs';
-import prisma from "@/config/prisma";
-import { Company, User } from '../../generated/prisma';
-import { CrudService } from "./crudservice";
 import { plainToInstance } from 'class-transformer';
-import { UserValidator } from '@/utils/validators';
+import { UserValidator } from '../utils/validators.js';
 import { validate } from 'class-validator';
-import { logger } from '@/utils/logger';
-import { AppError } from "@/utils/errors";
-import { HttpStatus } from "@/utils/constants";
-import { EmailService } from "./emailService";
-import { AuthService } from './authService';
-import { SmsService } from './smsService';
+import { HttpStatus } from '../utils/constants.js';
+import { AppError } from '../utils/errors.js';
+import { logger } from '../utils/logger.js';
+import { AuthService } from './authService.js';
+import { DataSource, Repository } from 'typeorm';
+import { User } from '../entities/User.js';
+import { CompanyService } from './companyService.js';
+import { omit } from 'lodash-es';
 
 export class UserService{
-    private SALT_ROUNDS = 10;
-    private emailService:EmailService;
-    private crudUser:CrudService<User>;
+    private userRepository: Repository<User>;
     private authService:AuthService;
+    private companyService:CompanyService;
+    private SALT_ROUNDS = 10;
     
-    constructor(){
-        this.crudUser = new CrudService<User>(prisma.user);
-        this.authService = new AuthService();
-        this.emailService = new EmailService();
+    constructor(dataSource: DataSource){
+        this.userRepository = dataSource.getRepository(User);
+        this.companyService = new CompanyService(dataSource);
+        this.authService = new AuthService(dataSource);
     }
 
-    async addUser(user:User, company:string):Promise<Omit<User, 'password' | 'createdAt' | 'updatedAt'>>{
+    async save(user:User, company:string){
         const hashPassword = await bcrypt.hash(user.password, this.SALT_ROUNDS);
-
-        console.log('user: ', user);
-        
         user.password = hashPassword;
         user.addedBy = user.fullName;
         user.updatedAt = new Date();
-        const newUser = await this.crudUser.create(user);
+        const usr = this.userRepository.create(user);
+        const newUser = await this.userRepository.save(usr);
         if(!newUser){
             throw new AppError('Could not create user', HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        this.createCompany(newUser, company);
-        this.createPath(company);
-        this.generateOtp(newUser);
-        const { password, ...userWithoutPassword } = newUser;
-        return userWithoutPassword;
+        const newCompany = await this.companyService.createCompany(newUser, company);
+        await this.companyService.createPath(company);
+        await this.authService.generateOtp(newUser);
+        const userWithoutPassword = omit(user, ['password']);
+        userWithoutPassword.id = newUser.id;
+
+        const accessToken = this.authService.createAccessToken(newUser);
+        const refreshToken = await this.authService.createRefreshToken(newUser.id);
+
+
+        return { accessToken, refreshToken, user: {...userWithoutPassword, company: newCompany} };
     }
 
-    private async createPath(company:string){
-        if(!fs.existsSync(`public/uploads/${company.replace(/\s/g, "")}`)){
-            fs.mkdirSync(`public/uploads/${company.replace(/\s/g, "")}`, { recursive: true })
-        }
-    }
-    
-    public generateOtp = async(user:User) => {
-      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-      await this.authService.createOtp(user.id, otpCode);
-      if(user.emailAddress){
-          await this.emailService.sendOtpEmail(user.emailAddress, otpCode);
-      }
-      if(user.phoneNumber){
-        await SmsService.sendOtpSms(user.phoneNumber, otpCode);
-      }
-    }
-    
-    private createCompany = async (user:User, companyName:string) => {
+    async getUsers(): Promise<User[]> {
         try {
-            const company = {
-                companyName,
-                addedBy: user.fullName,
-                userId: user.id,
-                updatedAt: new Date(),
-            } as Company;
-            await prisma.company.create({ data: company });
+            return await this.userRepository.find({
+                select: ['id', 'username', 'fullName', 'phoneNumber', 'emailAddress', 'isVerified'],
+            });
         } catch (error) {
-            throw new AppError('Could not create company', HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new AppError(`Failed to fetch users: ${error}`, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    async getUsers(): Promise<Omit<User, 'password'>[]> {
-        const users = await this.crudUser.findMany();
-        const newUsers = users.map(({ password, ...user }) => user);
-        return newUsers;
-    }
-
-    async getUserById(id: string): Promise<Omit<User, 'password'> | null> {
-        const u = await this.crudUser.findUnique(id);
-        let user = null;
-        if (u) {
-            const { password, ...newUser } = u;
-            user = newUser
-            logger.info('User retrieved successfully', { id });
-        } else {
-            logger.warn('User not found', { id });
+    async getUserById(id: string){
+         try {
+            return await this.userRepository.findOne({
+                where: { id },
+                select: ['id', 'username', 'fullName', 'phoneNumber', 'emailAddress', 'isVerified'],
+            });;
+        } catch (error) {
+            throw new AppError(`Failed to get user: ${error}`, HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return user;
     }
 
     async updateUser(id: string, data: Partial<User>): Promise<Omit<User, 'password' | 'createdAt' | 'updatedAt'> | null> {
@@ -106,21 +79,15 @@ export class UserService{
         }
         let updateData = { ...data };
         if (data.password) {
-        updateData.password = await bcrypt.hash(data.password, this.SALT_ROUNDS);
-        logger.debug('Password hashed successfully for user update', { id });
+            updateData.password = await bcrypt.hash(data.password, this.SALT_ROUNDS);
+            updateData.id = id;
+            logger.debug('Password hashed successfully for user update', { id });
         }
-        return this.crudUser.update(id, updateData);
+        return this.userRepository.save(updateData);
     }
 
-    async deleteUser(id: string): Promise<User | null> {
-        logger.debug('Deleting user', { id });
-        const user = await this.crudUser.delete(id);
-        if (user) {
-            logger.info('User deleted successfully', { id });
-        } else {
-            logger.warn('User not found for deletion', { id });
-        }
-        return user;
+    async deleteUser(id: string){
+        return await this.userRepository.delete(id);
     }
     
 }   

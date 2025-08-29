@@ -1,30 +1,39 @@
-import { IsEmail, IsNotEmpty, Length, Matches, MinLength, registerDecorator, ValidationArguments, ValidationOptions, ValidatorConstraint, ValidatorConstraintInterface } from 'class-validator';
-import prisma from '@/config/prisma';
+import { IsNotEmpty, Length, Matches, MinLength, registerDecorator, ValidationArguments, ValidationOptions, ValidatorConstraint, ValidatorConstraintInterface } from 'class-validator';
+import { DataSource, Repository } from 'typeorm';
+import { User } from '../entities/User.js';
 
 @ValidatorConstraint({ async: true })
 export class IsUniqueConstraint implements ValidatorConstraintInterface {
-  async validate(value: string, args: ValidationArguments) {
-    const [prismaField] = args.constraints as [string, string];
-    const user = await prisma.user.findFirst({
-      where: { [prismaField]: value },
-    });
-    return !user;
-  }
+  private static userRepository:Repository<User>;
 
-  defaultMessage(args: ValidationArguments) {
-    const [, displayName] = args.constraints as [string, string];
-    return `${displayName} ${args.value} already exists`;
-  }
+  public static initialize(dataSource: DataSource) {
+      this.userRepository = dataSource.getRepository(User);
+    }
+
+  async validate(value: string, args: ValidationArguments): Promise<boolean> {
+        if (!value) return true;
+        if (!IsUniqueConstraint.userRepository) {
+            throw new Error('UserRepository not initialized for IsUniqueConstraint');
+        }
+        const [field] = args.constraints as [string];
+        const user = await IsUniqueConstraint.userRepository.findOneBy({ [field]: value });
+        return !user;
+    }
+
+    defaultMessage(args: ValidationArguments): string {
+        const [, displayName] = args.constraints as [string, string];
+        return `${displayName} ${args.value} already exists`;
+    }
 }
 
- const createUniqueDecorator = (prismaField: string, displayName: string) => {
+ const createUniqueDecorator = (field: string, displayName: string) => {
   return function (validationOptions?: ValidationOptions) {
     return function (object: any, propertyName: string) {
       registerDecorator({
         target: object.constructor,
         propertyName,
         options: validationOptions,
-        constraints: [prismaField, displayName],
+        constraints: [field, displayName],
         validator: IsUniqueConstraint,
       });
     };
@@ -106,4 +115,30 @@ export class CustomerDetailsValidator {
 
   @IsNotEmpty({ message: 'User ID is required' })
   userId: string | undefined;
+}
+
+export class Js {
+  private static readonly EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  private static readonly PHONE_REGEX = /^(?:(?:\+233)|0)(?:[2357]\d{8}|[23][2-9]\d{7})$/;
+  private static readonly MAX_EMAIL_LENGTH = 254;
+
+  static isValidPhone = (phoneNumber: string): { isValid: boolean; message?: string } => {
+    const phone = phoneNumber.trim();
+    if (!Js.PHONE_REGEX.test(phone)) {
+      return { isValid: false, message: 'Invalid phone number format' };
+    }
+    return { isValid: true };
+  }
+
+  static isValidEmail = (email: string): { isValid: boolean; message?: string } => {
+    const emailAddress = email.trim();
+    if (emailAddress.length > Js.MAX_EMAIL_LENGTH) {
+      return { isValid: false, message: 'Email length exceeds maximum limit' };
+    }
+    if (!Js.EMAIL_REGEX.test(emailAddress)) {
+      return { isValid: false, message: 'Invalid email format' };
+    }
+
+    return { isValid: true };
+  }
 }

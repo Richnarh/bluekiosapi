@@ -1,13 +1,16 @@
 import express from 'express';
-import { CustomerController } from '@/controllers/customerController';
+import { DataSource } from 'typeorm';
+import { CustomerController } from '../controllers/customerController.js';
+import { authMiddleware } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
-const customerController = new CustomerController();
 
-router.post('/', customerController.create.bind(customerController));
-router.put('/', customerController.create.bind(customerController));
-router.get('/', customerController.getAllCustomers.bind(customerController));
-router.get('/:id', customerController.getCustomerById.bind(customerController));
-router.delete('/:id', customerController.deleteImages.bind(customerController));
-
-export default router;
+export const setupCustomerRoutes = (datasource:DataSource) => {
+    const customerController = new CustomerController(datasource);
+    router.post('/', authMiddleware, customerController.create.bind(customerController));
+    router.put('/', authMiddleware,customerController.create.bind(customerController));
+    router.get('/', authMiddleware,customerController.getAllCustomers.bind(customerController));
+    router.get('/:id', authMiddleware,customerController.getCustomerById.bind(customerController));
+    router.delete('/:id', authMiddleware, customerController.deleteImages.bind(customerController));
+    return router;
+}

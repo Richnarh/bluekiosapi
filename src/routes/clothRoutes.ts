@@ -1,31 +1,34 @@
-import { ClothController } from '@/controllers/clothController';
+import { ClothController } from '../controllers/clothController.js';
 import express, { Request } from 'express';
 import multer from 'multer';
 import fs from 'fs';
-import { DefaultService as ds } from '@/services/DefaultService';
-import { AppError } from '@/utils/errors';
-import { HttpStatus } from '@/utils/constants';
+import { DefaultService, DefaultService as ds } from '../services/DefaultService.js';
+import { AppError } from '../utils/errors.js';
+import { HttpStatus } from '../utils/constants.js';
+import { DataSource } from 'typeorm';
 
 const router = express.Router();
 
-const controller = new ClothController();
+export const setupClothImageRoutes = (dataSource: DataSource) => {
+  const controller = new ClothController(dataSource);
+  const ds = new DefaultService(dataSource);
 
 const storage = multer.diskStorage({
-  destination: async (req:Request, file, cb) => {
+   destination: async (req:Request, file, cb) => {
 
     const userId = req.headers['userid']?.toString();
     if(!userId){
         throw new AppError('UserId is required in headers', HttpStatus.BAD_REQUEST);
     }
-    const user = await ds.getUser(userId);
+    const user = await ds.getUserById(userId);
      if(!user){
         throw new AppError('User is required', HttpStatus.NOT_FOUND);
     }
-    const company = await ds.getCompany(user.id);
+    const company = await ds.getCompanyByUser(user.id);
      if(!company){
         throw new AppError('Company is required', HttpStatus.NOT_FOUND);
     }
-    const imagePath = `public/uploads/${company.companyName.replace(/\s/g, "")}`;
+    const imagePath = `public/uploads/${company.companyName?.replace(/\s/g, "")}`;
     if (!fs.existsSync(imagePath)) {
       fs.mkdirSync(imagePath, { recursive: true });
     }
@@ -44,13 +47,15 @@ const upload = multer({
       cb(new Error('Only JPEG,JPG & PNG images are allowed'));
     }
   },
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  limits: { fileSize: 5 * 1024 * 1024 },
 });
 
+  router.post('/', upload.single('file'), controller.create.bind(controller));
+  router.put('/', upload.single('file'), controller.create.bind(controller));
+  router.get('/:customerId/:referenceId', controller.getImage.bind(controller));
+  router.delete('/:id', controller.delete.bind(controller));
 
-router.post('/', upload.single('file'), controller.create.bind(controller));
-router.put('/', upload.single('file'), controller.create.bind(controller));
-router.get('/:customerId/:referenceId', controller.getImages.bind(controller));
-router.delete('/:id', controller.delete.bind(controller));
+  return router;
+}
 
 export default router;

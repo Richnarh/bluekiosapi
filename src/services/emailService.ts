@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
-import { logger } from '@/utils/logger';
-import { AppError } from '@/utils/errors';
-import { HttpStatus } from '@/utils/constants';
+import { HttpStatus } from '../utils/constants.js';
+import { AppError } from '../utils/errors.js';
+import { logger } from '../utils/logger.js';
 
 export class EmailService {
   private transporter: nodemailer.Transporter;

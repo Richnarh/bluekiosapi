@@ -1,8 +1,8 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "Asaride NodeJS API - Version: 1.0.0",
-    "description": "API for managing asaride app",
+    "title": "Bluekios NodeJS API - Version: 1.0.0",
+    "description": "API for managing bluekios app",
     "version": "1.0.0"
   },
   "servers": [
@@ -106,7 +106,7 @@
             "description": "User created successfully",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/LoginResponse" }
+                "schema": { "$ref": "#/components/schemas/User" }
               }
             }
           },
@@ -371,7 +371,7 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/RefreshTokenRequest" }
+              "schema": { "$ref": "#/components/schemas/RefreshToken" }
             }
           }
         },

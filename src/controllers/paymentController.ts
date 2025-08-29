@@ -1,16 +1,20 @@
-import prisma from "@/config/prisma";
-import { HttpStatus } from "@/utils/constants";
-import { AppError } from "@/utils/errors";
-import { logger } from "@/utils/logger";
-import { isEmpty } from "class-validator";
 import { NextFunction,Request,Response } from "express";
-import { PaymentInfo } from "generated/prisma";
+import { DataSource, Repository } from "typeorm";
+
+import { HttpStatus } from "../utils/constants.js";
+import { AppError } from "../utils/errors.js";
+import { logger } from "../utils/logger.js";
+import { isEmpty } from "class-validator";
+import { PaymentInfo } from "../entities/PaymentInfo.js";
 
 export class PaymentController{
+    private readonly paymentRepository:Repository<PaymentInfo>
+    constructor(dataSource:DataSource){
+        this.paymentRepository = dataSource.getRepository(PaymentInfo);
+    }
     public create = async (req: Request, res: Response, next:NextFunction) => {
         try {
-            let result;
-            const payment = req.body as PaymentInfo;
+            const payment = req.body;
             if(isEmpty(payment.customerId)){
                 throw new AppError('CustomerId is required', HttpStatus.BAD_REQUEST);
             }
@@ -23,15 +27,7 @@ export class PaymentController{
             if (payment.date) {
                 payment.date = new Date(payment.date);
             }
-            if(payment.id){
-                payment.updatedAt = new Date();
-                result = await prisma.paymentInfo.update({
-                    where: { id: payment.id },
-                    data: payment
-                })
-            }else{
-                result = await prisma.paymentInfo.create({ data: payment });
-            }
+            const result = await this.paymentRepository.save(payment);
             res.status(HttpStatus.CREATED).json(result);
         } catch (error) {
             logger.error(error);
@@ -41,15 +37,13 @@ export class PaymentController{
 
     async getPaymentsByCustomer (req: Request, res: Response, next: NextFunction){
         try {
-            const { customerId } = req.params;  
-            const userId = req.headers['userId']?.toString();
-            const result = await prisma.paymentInfo.findMany({
+            const { customerId, } = req.params;  
+            const userId = req.headers['userid']?.toString();
+            const result = await this.paymentRepository.find({
                 where: { 
-                    AND: [
-                        { customerId },
-                        { userId },
-                    ]
-                 }
+                    customer: { id: customerId },
+                    user: { id: userId },
+                }
             });
             res.status(HttpStatus.OK).json({ data:  result });
         } catch (error) {
@@ -62,13 +56,11 @@ export class PaymentController{
         try {
             const { referenceId, customerId } = req.params;  
             const userId = req.headers['userid']?.toString();
-            const result = await prisma.paymentInfo.findFirst({
+            const result = await this.paymentRepository.findOne({
                 where: { 
-                    AND: [
-                        { referenceId },
-                        { customerId },
-                        { userId },
-                    ]
+                    reference: { id: referenceId },
+                    customer: { id: customerId },
+                    user: { id: userId },
                 }
             });
             res.status(HttpStatus.OK).json({ data:  result });

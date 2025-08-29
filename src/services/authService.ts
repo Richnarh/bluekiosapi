@@ -1,45 +1,44 @@
+import { DataSource, MoreThanOrEqual, Repository } from 'typeorm';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
-import { ulid } from 'ulid';
 import jwt from 'jsonwebtoken';
-import prisma from '@/config/prisma';
-import { Otp, RefreshToken, User } from '../../generated/prisma';
-import { HttpStatus } from '@/utils/constants';
-import { AppError } from '@/utils/errors';
-import { logger } from '@/utils/logger';
-import { CrudService } from './crudservice';
-import { plainToInstance } from 'class-transformer';
-import { isEmpty, validate } from 'class-validator';
-import { LoginUserValidator, VerifyOtpValidator } from '@/utils/validators';
-import { DefaultService as ds } from './DefaultService';
+import { HttpStatus } from '../utils/constants.js';
+import { AppError } from '../utils/errors.js';
+import { logger } from '../utils/logger.js';
+import { isEmpty } from 'class-validator';
+import { DefaultService } from './DefaultService.js';
+import { User } from '../entities/User.js';
+import { RefreshToken } from '../entities/RefreshToken.js';
+import { Otp } from '../entities/Otp.js';
+import { EmailService } from './emailService.js';
+import { SmsService } from './smsService.js';
 
 export class AuthService{
+  private userRepository: Repository<User>;
+  private otpRepository:Repository<Otp>;
+  private tokenRepository:Repository<RefreshToken>;
+  private ds:DefaultService;
+  private emailService:EmailService;
   private SALT_ROUNDS = 10;
-  private otpService:CrudService<Otp>;
-  private tokenService:CrudService<RefreshToken>;
-  private userService:CrudService<User>;
-
-  constructor(){
-    this.otpService = new CrudService<Otp>(prisma.otp);
-    this.tokenService = new CrudService<RefreshToken>(prisma.refreshToken);
-    this.userService = new CrudService<User>(prisma.user);
+  
+  constructor(dataSource: DataSource) {
+    this.userRepository = dataSource.getRepository(User);
+    this.otpRepository = dataSource.getRepository(Otp);
+    this.tokenRepository = dataSource.getRepository(RefreshToken);
+    this.emailService = new EmailService();
+    this.ds = new DefaultService(dataSource);
   }
-    async loginUser(loginReq:{username: string, password: string}): Promise<{ user: User; accessToken: string; refreshToken: string }> {
-        const loginDto = plainToInstance(LoginUserValidator, loginReq);
-        const errors = await validate(loginDto);
-
-        if (errors.length > 0) {
-        const errorMessages = errors
-            .map(err => Object.values(err.constraints || {}).join(', '))
-            .join('; ');
-            logger.warn('Validation failed for loginUser', { errors: errorMessages });
-            throw new AppError(`Validation failed: ${errorMessages}`, HttpStatus.BAD_REQUEST);
-        }
-
-        const  { username, password } = loginReq;
-        
-      const user = await prisma.user.findFirst({ 
-        where: { username: username }
+  
+    async loginUser(loginReq:{username: string, password: string}) {
+      const  { username, password } = loginReq;
+      if(!username){
+       throw new AppError('Username is required', HttpStatus.BAD_REQUEST);
+      }
+      if(!password){
+       throw new AppError('Password is required', HttpStatus.BAD_REQUEST);
+      }
+      const user = await this.userRepository.findOne({ 
+        where: { username }
       });
       if (!user) {
         throw new AppError('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -51,173 +50,187 @@ export class AuthService{
       if (!isMatch) {
         throw new AppError('Invalid username or password', HttpStatus.BAD_REQUEST);
       }
+      const accessToken = this.createAccessToken(user);
+      const refreshToken = await this.createRefreshToken(user.id);
+      logger.info('User logged in successfully', { userId: user.id });
+      return { user, accessToken, refreshToken };
+    }
+    
+    public createAccessToken(user:User){
       if (!process.env.JWT_SECRET) {
         throw new AppError('Server configuration error', HttpStatus.INTERNAL_SERVER_ERROR);
       }
       let accessToken:string | null;
       if(!isEmpty(user.emailAddress)){
-        accessToken = jwt.sign({ id: user.id, emailAddress: user.emailAddress }, process.env.JWT_SECRET, { expiresIn: '3h' });
+        accessToken = jwt.sign({ id: user.id, emailAddress: user.emailAddress }, process.env.JWT_SECRET, { expiresIn: '5h' });
       }else{
-        accessToken = jwt.sign({ id: user.id, phoneNumber: user.phoneNumber }, process.env.JWT_SECRET, { expiresIn: '3h' });
+        accessToken = jwt.sign({ id: user.id, phoneNumber: user.phoneNumber }, process.env.JWT_SECRET, { expiresIn: '5h' });
       }
-      const refreshToken = await this.createRefreshToken(user.id);
-      logger.info('User logged in successfully', { userId: user.id });
-      return { user, accessToken, refreshToken };
+      return accessToken;
     }
   
-    async refreshAccessToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
-      const tokenRecord = await this.verifyRefreshToken(refreshToken);
-      const user = await this.userService.findUnique(tokenRecord.userId);
+  async refreshAccessToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
+      const tokens = await this.verifyRefreshToken(refreshToken);
+      const user = await this.userRepository.findOneBy({ id: tokens.user?.id });
       if (!user) {
-        logger.warn('User not found for refresh token', { userId: tokenRecord.userId });
         throw new AppError('Invalid refresh token', HttpStatus.BAD_REQUEST);
       }
-      await this.deleteRefreshToken(tokenRecord.id);
-      const accessToken = jwt.sign({ id: user.id, emailAddress: user.emailAddress }, process.env.JWT_SECRET!, { expiresIn: '1h'});
-      const newRefreshToken = await this.createRefreshToken(user.id);
+      await this.tokenRepository.remove(tokens);
+      const accessToken = jwt.sign({ id: user.id, emailAddress: user.emailAddress }, process.env.JWT_SECRET!, { expiresIn: '5h'});
+      const token = await this.createRefreshToken(user.id!);
       logger.info('Access token refreshed successfully', { userId: user.id });
-      return { accessToken, refreshToken: newRefreshToken };
+      return { accessToken, refreshToken: token! };
   }
 
-  async createRefreshToken(userId: string): Promise<string> {
-    logger.debug('Creating refresh token for user', { userId });
-    const token = crypto.randomBytes(32).toString('hex');
-    const hashedToken = await bcrypt.hash(token, this.SALT_ROUNDS);
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-    const user = await prisma.user.findUnique({ where: {id: userId }});
-    const refreshToken = await this.tokenService.create({
-      id: ulid(),
-      refreshToken: hashedToken,
-      userId,
-      expiresAt,
-      createdAt: new Date(),
-      addedBy: user?.fullName || null
-    });
-    logger.info('Refresh token created successfully', { userId, tokenId: refreshToken.id });
-    return token;
+  async createRefreshToken(id: string){
+    try {
+      const token = crypto.randomBytes(32).toString('hex');
+      const hashedToken = await bcrypt.hash(token, this.SALT_ROUNDS);
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+      const user = await this.userRepository.findOneBy({ id });
+      if(!user){
+        throw new AppError('UserId is required', HttpStatus.BAD_REQUEST);
+      }
+      const refreshToken = new RefreshToken();
+      refreshToken.user = user!;
+      refreshToken.token = hashedToken;
+      refreshToken.expiresAt = expiresAt;
+      refreshToken.addedBy = user?.emailAddress;
+      await this.tokenRepository.save(refreshToken);
+      logger.info('Refresh token created successfully', { tokenId: refreshToken.id });
+      return token;
+    } catch (error) {
+      console.log(error)
+      throw new AppError(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   async verifyRefreshToken(token: string): Promise<RefreshToken> {
-    logger.debug('Verifying refresh token');
-    const tokenRecord = await prisma.refreshToken.findFirst({
-      where: {
-        expiresAt: { gte: new Date() },
-      },
-    });
+    const tokenRecord = await this.tokenRepository
+    .createQueryBuilder('refreshToken')
+    .where('refreshToken.expiresAt >= :currentDate', { currentDate: new Date() })
+    .getOne();
+    
     if (!tokenRecord) {
-      logger.warn('Invalid or expired refresh token');
       throw new AppError('Invalid or expired refresh token', HttpStatus.UNAUTHORIZED);
     }
-    const isMatch = await bcrypt.compare(token, tokenRecord.refreshToken);
+    const isMatch = await bcrypt.compare(token, tokenRecord.token!);
     if (!isMatch) {
-      logger.warn('Invalid refresh token');
       throw new AppError('Invalid refresh token', HttpStatus.BAD_REQUEST);
     }
-    logger.info('Refresh token verified successfully', { userId: tokenRecord.userId });
+    logger.info('Refresh token verified successfully', { userId: tokenRecord.user });
     return tokenRecord;
   }
 
-  async findRefreshToken(token: string,userId:string): Promise<RefreshToken | null> {
-    const tokenRecord = await prisma.refreshToken.findFirst({
-      where: {
-        userId: userId,
-        expiresAt: { gte: new Date() },
-      },
-    });
+  async findRefreshToken(token: string, user: User): Promise<RefreshToken | null> {
+    const tokenRecord = await this.tokenRepository
+      .createQueryBuilder('refreshToken')
+      .where('refreshToken.user = :userId', { userId: user.id })
+      .andWhere('refreshToken.expiresAt >= :currentDate', { currentDate: new Date() })
+      .getOne();
+
     if (!tokenRecord) return null;
-    const isMatch = await bcrypt.compare(token, tokenRecord.refreshToken);
+    
+    const isMatch = await bcrypt.compare(token, tokenRecord.token!);
     return isMatch ? tokenRecord : null;
   }
 
   deleteRefreshToken = async (id: string) => {
-    await this.tokenService.delete(id);
+    await this.tokenRepository.delete(id);
     logger.info('Refresh token deleted successfully', { id });
   }
 
   logoutUser = async (refreshToken: string, userId:string) => {
-    console.log('refreshToken: ', refreshToken)
-    console.log('userId: ', userId)
-    const tokenRecord = await this.findRefreshToken(refreshToken,userId);
-    console.log('tokenRecord: ', tokenRecord)
+    const user = await this.userRepository.findOneBy({ id: userId });
+    if(!user){
+      throw new AppError('User not found', HttpStatus.BAD_REQUEST);
+    }
+    const tokenRecord = await this.findRefreshToken(refreshToken,user);
     if (tokenRecord) {
-        await this.deleteRefreshToken(tokenRecord.id);
-        logger.info('User logged out successfully', { userId: tokenRecord.userId });
+        await this.tokenRepository.remove(tokenRecord);
+        logger.info('User logged out successfully', { userId: tokenRecord.user });
     } else {
         throw new AppError('Refresh token not found for logout', HttpStatus.NOT_FOUND);
     }
   }
 
   verifyPassword = async(id: string, password: string): Promise<boolean> => {
-      const user = await this.userService.findUnique(id);
+      const user = await this.userRepository.findOneBy({ id });
       if (!user) {
         throw new AppError('User not found for password verification', HttpStatus.NOT_FOUND);
       }
       return await bcrypt.compare(password, user.password);
     }
 
-  async verifyUser(id: string): Promise<Omit<User, 'password' | 'createdAt' | 'updatedAt'> | null> {
-      logger.debug('Verifying user', { id });
-      const u = await this.userService.update(id, { isVerified: true });
-      let user = null;
-      if (u) {
-          const { password, ...newUser } = u;
-          user = newUser;
-          logger.info('User verified successfully', { id });
-        } else {
-            logger.warn('User not found for verification', { id });
-        }
-      return user;
+async verifyUser(id: string){
+    try {
+      const updateResult = await this.userRepository.update(id, { isVerified: true });
+
+      if (updateResult.affected === 0) {
+        logger.warn('User not found for verification', { id });
+        return null;
+      }
+      const user = await this.userRepository.findOne({ where: { id } });
+      if (!user) {
+        logger.warn('User not found after update', { id });
+        return null;
+      }
+      const { password, createdAt, updatedAt, ...verifiedUser } = user;
+      return verifiedUser;
+    } catch (error) {
+      logger.error(error);
+      throw new AppError(`Failed to verify user with ID ${id}: ${error}`, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   async createOtp(userId: string, code: string): Promise<Otp> {
-    logger.debug('Creating OTP for user', { userId });
+    const existingOtp = await this.otpRepository.findOneBy({ user: { id: userId } });
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-    const user = await ds.getUser(userId);
-    const company = await ds.getCompany(userId);
-    const otp = await this.otpService.create({
-      id: ulid(),
-      code,
-      userId,
-      expiresAt,
-      createdAt: new Date(),
-      addedBy: user?.fullName +' '+company?.companyName || null
-    });
-    logger.info('OTP created successfully', { userId, otpId: otp.id });
-    return otp;
+    let newOtp:Otp;
+    if(existingOtp){
+      existingOtp.code = code;
+      existingOtp.expiresAt = expiresAt
+      newOtp = await this.otpRepository.save(existingOtp);
+    }else{
+      const user = await this.ds.getUserById(userId);
+      const company = await this.ds.getCompanyByUser(userId);
+      const otp = new Otp();
+      otp.code = code;
+      otp.expiresAt = expiresAt
+      otp.user = user!;
+      otp.addedBy = user?.fullName +' '+company?.companyName || null!
+      newOtp = await this.otpRepository.save(otp);
+    }
+    return newOtp;
   }
 
-  async verifyOtp(verifyDto:{userId: string, code: string}): Promise<Otp | null> {
-    const result = plainToInstance(VerifyOtpValidator, verifyDto);
-    const errors = await validate(result);
-    
-    if (errors.length > 0) {
-        const errorMessages = errors
-        .map(err => Object.values(err.constraints || {}).join(', '))
-        .join('; ');
-        logger.warn('Validation failed for verifyOtp', { errors: errorMessages });
-        throw new AppError(`${errorMessages}`, HttpStatus.BAD_REQUEST);
-    }
-    const { userId, code } = verifyDto;
-    
-    const otp = await prisma.otp.findFirst({
-    where: {
-        userId,
-        code,
-        expiresAt: { gte: new Date() },
-    },
-    });
-    if (otp) {
-        logger.info('OTP verified successfully', { userId, otpId: otp.id });
-    } else {
-        logger.warn('Invalid or expired OTP', { userId });
+  public verifyOttp = async (userId:string, code: string) => {
+    const otp = await this.otpRepository.findOne({
+      where: {
+        user: { id: userId },
+        code: code,
+        expiresAt: MoreThanOrEqual(new Date()),
+      }
+    })
+    if (!otp){
         throw new AppError('Invalid or expired OTP', HttpStatus.BAD_REQUEST);
     }
     return otp;
   }
 
+  public generateOtp = async(user:User) => {
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    await this.createOtp(user.id, otpCode);
+    if(user.emailAddress){
+        await this.emailService.sendOtpEmail(user.emailAddress, otpCode);
+    }
+    if(user.phoneNumber){
+      await SmsService.sendOtpSms(user.phoneNumber, otpCode);
+    }
+  }
+  
   async deleteOtp(code: string): Promise<void> {
-    logger.debug('Deleting OTP', { code });
-    await prisma.otp.delete({ where: { code } });
+    await this.otpRepository.delete({ code });
     logger.info('OTP deleted successfully', { code });
   }
 }

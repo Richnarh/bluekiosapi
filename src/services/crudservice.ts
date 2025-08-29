@@ -1,6 +1,6 @@
-import { AppError } from '@/utils/errors';
-import { HttpStatus } from '@/utils/constants';
-import { logger } from '@/utils/logger';
+import { HttpStatus } from '../utils/constants.js';
+import { AppError } from '../utils/errors.js';
+import { logger } from '../utils/logger.js';
 
 export class CrudService<T> {
   private model: any;

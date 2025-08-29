@@ -1,0 +1,41 @@
+export enum Region {
+  AHAFO = 'AHAFO',
+  ASHANTI = 'ASHANTI',
+  BONO_EAST = 'BONO_EAST',
+  CENTRAL = 'CENTRAL',
+  EASTERN = 'EASTERN',
+  GREATER_ACCRA = 'GREATER_ACCRA',
+  NORTH_EAST = 'NORTH_EAST',
+  NORTHERN = 'NORTHERN',
+  OTI = 'OTI',
+  SAVANNAH = 'SAVANNAH',
+  UPPER_EAST = 'UPPER_EAST',
+  UPPER_WEST = 'UPPER_WEST',
+  VOLTER = 'VOLTER',
+  WESTERN = 'WESTERN',
+  WESTERN_NORTH = 'WESTERN_NORTH',
+}
+
+export enum MeasureType {
+  DEFAULT_TYPE = 'DEFAULT_TYPE',
+  CUSTOM = 'CUSTOM',
+}
+
+export enum Gender {
+  MALE = 'MALE',
+  FEMALE = 'FEMALE',
+}
+
+export enum PaymentMethod {
+  CASH = 'CASH',
+  MOBILE_MONEY = 'MOBILE_MONEY',
+  BANK_TRANSFER = 'BANK_TRANSFER',
+  CHEQUE = 'CHEQUE',
+  CREDIT_CARD = 'CREDIT_CARD',
+}
+
+export enum PaymentStatus {
+  PENDING = 'PENDING',
+  FULLY_PAID = 'FULLY_PAID',
+  PART_PAYMENT = 'PART_PAYMENT',
+}

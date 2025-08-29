@@ -1,12 +1,15 @@
 import express from "express";
-import { ReferenceController } from "@/controllers/referenceController";
+import { ReferenceController } from "../controllers/referenceController.js";
+import { DataSource } from "typeorm";
 
 const router = express.Router();
-const controller = new ReferenceController();
-
-router.post('/', controller.createRef.bind(controller));
-router.put('/', controller.createRef.bind(controller));
-router.get('/:id', controller.getRefById.bind(controller));
-router.get('/:userId/:customerId', controller.getReferences.bind(controller));
-router.get('/customer/:customerId/refs', controller.getReferencesByCustomer.bind(controller));
-export default router;
+export const setupReferenceRoutes = (dataSource: DataSource) => {
+    const controller = new ReferenceController(dataSource);
+    
+    router.post('/', controller.save.bind(controller));
+    router.put('/', controller.save.bind(controller));
+    router.get('/:id', controller.getRefById.bind(controller));
+    router.get('/:userId/:customerId', controller.getReferences.bind(controller));
+    router.get('/customer/:customerId/refs', controller.getReferencesByCustomer.bind(controller));
+    return router;
+};

@@ -1,12 +1,14 @@
-import { PaymentController } from '@/controllers/paymentController';
+import { DataSource } from 'typeorm';
+import { PaymentController } from '../controllers/paymentController.js';
 import express from 'express';
 
 const router = express.Router();
 
-const controller = new PaymentController();
-router.post('/', controller.create.bind(controller));
-router.put('/', controller.create.bind(controller));
-router.get('/customer/:customerId', controller.getPaymentsByCustomer.bind(controller));
-router.get('/:referenceId/:customerId', controller.getPaymentsByReference.bind(controller));
-
-export default router;
+export const setupPaymentInfoRoutes = (dataSource: DataSource) => {
+    const controller = new PaymentController(dataSource);
+    router.post('/', controller.create.bind(controller));
+    router.put('/', controller.create.bind(controller));
+    router.get('/customer/:customerId', controller.getPaymentsByCustomer.bind(controller));
+    router.get('/:referenceId/:customerId', controller.getPaymentsByReference.bind(controller));
+    return router;
+};
