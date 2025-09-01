@@ -8,16 +8,7 @@ import { Reference } from './Reference.js';
 export class ClothImage extends BaseModel {
   @Column({ name: 'image_url', type: 'text' })
   imageUrl?: string;
-
-//   @Column({ name: 'customer_id', type: 'varchar', length: 255 })
-//   customerId: string;
-
-//   @Column({ name: 'user_id', type: 'varchar', length: 255 })
-//   userId: string;
-
-//   @Column({ name: 'reference_id', type: 'varchar', length: 255 })
-//   referenceId: string;
-
+  
   @ManyToOne(() => Customer, (customer) => customer.clothImage)
   @JoinColumn({ name: 'customers' })
   customer?: Customer;

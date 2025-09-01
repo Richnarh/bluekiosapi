@@ -12,14 +12,10 @@ import { Reference } from '../entities/Reference.js';
 
 export class ClothImageService{
     private readonly clothImageRepository:Repository<ClothImage>;
-    private readonly customerRepository:Repository<Customer>;
-    private readonly referenceRepository:Repository<Reference>;
     private readonly ds:DefaultService;
 
     constructor(dataSource:DataSource){
         this.clothImageRepository = dataSource.getRepository(ClothImage);
-        this.customerRepository = dataSource.getRepository(Customer);
-        this.referenceRepository = dataSource.getRepository(Reference);
         this.ds = new DefaultService(dataSource);
     }
 
@@ -39,20 +35,21 @@ export class ClothImageService{
             throw new AppError('Company Name is required', HttpStatus.BAD_REQUEST);
         }
 
-        const customer = await this.customerRepository.findOneBy({ id: customerId });
-        const reference = await this.referenceRepository.findOneBy({ id: referenceId });
+        const customer = await this.ds.getCustomerById(customerId);
+        const reference = await this.ds.getReferenceById(referenceId);
 
-        const uploadDir = path.join(`Uploads/${company.companyName?.replace(/\s/g, '')}`);
+        const uploadDir = path.join(`uploads/${company.companyName?.replace(/\s/g, '')}`);
         if (!fs.existsSync(`public/${uploadDir}`)) {
-            throw new AppError(`Directory: /Uploads/${company.companyName}, does not exist for upload`, HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new AppError(`Directory: /uploads/${company.companyName}, does not exist for upload`, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         if (id) {
             const existingImage = await this.clothImageRepository.findOne({
                 where: { 
                     id, 
-                    customer: { id: customerId}, 
-                    user: { id: userId} 
+                    customer: { id: customerId }, 
+                    user: { id: userId },
+                    reference: { id: referenceId } 
                 },
             });
             if (!existingImage) {
@@ -70,23 +67,14 @@ export class ClothImageService{
         const payload = {
             imageUrl: `${uploadDir}/${file.originalname}`,
             addedBy: user.fullName || null,
-            customer,
-            user,
-            reference,
+            customer, user, reference 
         } as ClothImage;
 
-        let result;
-        if (id) {
-            await this.clothImageRepository.update({ id }, payload);
-            result = await this.clothImageRepository.findOne({ where: { id } });
-        } else {
-            result = await this.clothImageRepository.save(payload);
-        }
-
+        const createImage = this.clothImageRepository.create(payload);
+        const result = await this.clothImageRepository.save(createImage);
         if (!result) {
             throw new AppError('Could not upload image', HttpStatus.BAD_REQUEST);
         }
-
         return result;
     }
 

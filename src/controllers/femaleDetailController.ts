@@ -12,21 +12,25 @@ export class FemaleDetailController {
         this.femaleDetailsService = new FemaleDetailService(dataSource);
     }
 
-    async createMany(req: Request, res: Response, next: NextFunction) {
+    async saveAllDetailsBycustomerId(req: Request, res: Response, next: NextFunction) {
         try {
             const details = req.body;
             if (!Array.isArray(details) || details.length === 0) {
                 throw new AppError('Invalid input data', HttpStatus.BAD_REQUEST);
             }
-            const { userId, customerId } = req.params;
+            const { customerId } = req.params;
+            const userId = req.headers['X-User-Id']?.toString();
             if (!userId) {
                 throw new AppError('UserId is required', HttpStatus.BAD_REQUEST);
             }
             if (!customerId) {
                 throw new AppError('CustomerId is required', HttpStatus.BAD_REQUEST);
             }
-            const count = this.femaleDetailsService.save(details,req.method,userId, customerId);
-            res.status(HttpStatus.CREATED).json({ message: `Record added successfully.`, data: count });
+            const result = await this.femaleDetailsService.save(details, req.method, userId, customerId);
+            res.status(HttpStatus.OK).json({
+                message: `${req.method === 'POST' ? 'Created' : 'Updated'} ${result.count} male details successfully`,
+                data: result,
+            });
         } catch (error) {
             next(error);
         }
@@ -35,7 +39,7 @@ export class FemaleDetailController {
     async fetchFemaleDetailsByCustomerId(req: Request, res: Response, next: NextFunction) {
         try {
             const { customerId } = req.params;
-            const userId = req.headers['userid']?.toString();
+            const userId = req.headers['X-User-Id']?.toString();
 
             if (!customerId) {
                 throw new AppError('Reference ID is required', HttpStatus.BAD_REQUEST);
@@ -48,7 +52,8 @@ export class FemaleDetailController {
 
             res.status(HttpStatus.OK).json({
                 message: 'Female details fetched successfully',
-                data: result,
+                data: result.data,
+                count: result.count,
             });
         } catch (error) {
             logger.error(error);
@@ -56,10 +61,10 @@ export class FemaleDetailController {
         }
     }
 
-    async delete(req: Request, res: Response, next: NextFunction) {
+    async deleteDetails(req: Request, res: Response, next: NextFunction) {
         try {
             const { referenceId } = req.params;
-            const userId = req.headers['userid']?.toString();
+            const userId = req.headers['X-User-Id']?.toString();
 
             if (!referenceId) {
                 throw new AppError('Reference ID is required', HttpStatus.BAD_REQUEST);

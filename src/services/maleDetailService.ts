@@ -1,4 +1,4 @@
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { HttpStatus } from '../utils/constants.js';
 import { AppError } from '../utils/errors.js';
 import { DefaultService } from "./DefaultService.js";
@@ -97,8 +97,8 @@ export class MaleDetailService{
                             measuredValue: Number(detail.measuredValue),
                             user: { id: userId}, 
                             customer: { id: customerId },
-                            maleMeasurement: {id: detail.maleMeasurementId}, 
-                            reference: {id: detail.referenceId} 
+                            maleMeasurement: { id: detail.maleMeasurementId }, 
+                            reference: {id: detail.referenceId }, 
                         },
                     );
                     updatedCount++;
@@ -159,13 +159,21 @@ export class MaleDetailService{
                 throw new AppError('User ID is required', HttpStatus.BAD_REQUEST);
             }
 
+            const references = await this.referenceRepository.find({
+                where: {
+                    customer: { id: customerId }, 
+                    user: { id: userId }, 
+                }
+            });
+
             const details = await this.maleDetailsRepository.find({
                 where: { 
                     customer: { id: customerId }, 
-                    user: { id: userId } 
+                    user: { id: userId }, 
+                    reference: { id: In(references.map((ref) => ref.id)) },
                 },
-                select: ['id', 'user', 'customer', 'reference', 'maleMeasurement', 'measuredValue'],
-                relations: ['reference', 'maleMeasurement'],
+                select: ['id', 'reference', 'maleMeasurement', 'measuredValue'],
+                relations: { reference: true, maleMeasurement: true },
                 relationLoadStrategy: 'query',
                 loadEagerRelations: false,
             });

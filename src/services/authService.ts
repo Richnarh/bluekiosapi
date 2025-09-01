@@ -12,11 +12,14 @@ import { RefreshToken } from '../entities/RefreshToken.js';
 import { Otp } from '../entities/Otp.js';
 import { EmailService } from './emailService.js';
 import { SmsService } from './smsService.js';
+import { CompanyService } from './companyService.js';
+import { omit } from 'lodash-es';
 
 export class AuthService{
   private userRepository: Repository<User>;
   private otpRepository:Repository<Otp>;
   private tokenRepository:Repository<RefreshToken>;
+  private companyService:CompanyService;
   private ds:DefaultService;
   private emailService:EmailService;
   private SALT_ROUNDS = 10;
@@ -25,10 +28,34 @@ export class AuthService{
     this.userRepository = dataSource.getRepository(User);
     this.otpRepository = dataSource.getRepository(Otp);
     this.tokenRepository = dataSource.getRepository(RefreshToken);
+    this.companyService = new CompanyService(dataSource);
     this.emailService = new EmailService();
     this.ds = new DefaultService(dataSource);
   }
   
+    async save(user:User, company:string){
+        const hashPassword = await bcrypt.hash(user.password, this.SALT_ROUNDS);
+        user.password = hashPassword;
+        user.addedBy = user.fullName;
+        user.updatedAt = new Date();
+        const usr = this.userRepository.create(user);
+        const newUser = await this.userRepository.save(usr);
+        if(!newUser){
+            throw new AppError('Could not create user', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        const newCompany = await this.companyService.createCompany(newUser, company);
+        await this.companyService.createPath(company);
+        await this.generateOtp(newUser);
+        const userWithoutPassword = omit(user, ['password']);
+        userWithoutPassword.id = newUser.id;
+
+        const accessToken = this.createAccessToken(newUser);
+        const refreshToken = await this.createRefreshToken(newUser.id);
+
+
+        return { accessToken, refreshToken, user: {...userWithoutPassword, company: newCompany} };
+    }
+    
     async loginUser(loginReq:{username: string, password: string}) {
       const  { username, password } = loginReq;
       if(!username){

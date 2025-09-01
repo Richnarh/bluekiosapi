@@ -6,6 +6,7 @@ const router = express.Router();
 export const setupAuthRoutes = (dataSource: DataSource) => {
     const authController = new AuthController(dataSource);
 
+    router.post('/register', authController.registerUser.bind(authController));
     router.post('/login', authController.loginUser.bind(authController));
     router.post('/logout/:userId', authController.logoutUser.bind(authController));
     router.post('/refresh', authController.refreshToken.bind(authController));

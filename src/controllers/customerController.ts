@@ -34,7 +34,7 @@ export class CustomerController{
 
     async getAllCustomers(req:Request, res:Response, next:NextFunction){
         try {
-            const userId = req.headers['userid']?.toString();
+            const userId = req.headers['X-User-Id']?.toString();
             const result = await this.customerRepository.find({ where: { user: {id: userId }} })
             res.status(HttpStatus.OK).json({
                 count: result.length,

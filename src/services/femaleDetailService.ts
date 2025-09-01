@@ -1,4 +1,4 @@
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { FormType } from "../models/model.js";
 import { HttpStatus } from '../utils/constants.js';
 import { AppError } from '../utils/errors.js';
@@ -7,17 +7,20 @@ import { FemaleDetails } from '../entities/FemaleDetails.js';
 import { DefaultService } from './DefaultService.js';
 import { Reference } from '../entities/Reference.js';
 import { Customer } from '../entities/Customer.js';
+import { FemaleMeasurement } from '../entities/FemaleMeasurement.js';
 
 export class FemaleDetailService{
     private readonly femaleDetailsRepository:Repository<FemaleDetails>;
     private readonly referenceRepository:Repository<Reference>;
     private readonly customerRepository:Repository<Customer>;
     private readonly ds:DefaultService;
+    private readonly femaleMeasurementRepository:Repository<FemaleMeasurement>;
 
     constructor(dataSource:DataSource){
         this.femaleDetailsRepository = dataSource.getRepository(FemaleDetails);
         this.customerRepository = dataSource.getRepository(Customer);
         this.referenceRepository = dataSource.getRepository(Reference);
+        this.femaleMeasurementRepository = dataSource.getRepository(FemaleMeasurement);
         this.ds = new DefaultService(dataSource);
     }
 
@@ -46,20 +49,31 @@ export class FemaleDetailService{
                 addedBy: `${user.fullName} - ${company.companyName}`,
             } as Reference;
 
-            const saveRef = await this.referenceRepository.save(ref);
-            if (!saveRef) {
-                throw new AppError('Failed to create reference', HttpStatus.INTERNAL_SERVER_ERROR);
-            }
+            return await this.referenceRepository.manager.transaction(async (transactionalEntityManager) => {
+                const payload = this.referenceRepository.create(ref);
+                const saveRef = await transactionalEntityManager.save(Reference, payload);
+                if (!saveRef) {
+                    throw new AppError('Failed to create reference', HttpStatus.INTERNAL_SERVER_ERROR);
+                }
 
-            const detailsWithRef = details.map((detail) => ({
-                ...detail,
-                reference: saveRef,
-                user,
-                customer,
-            }));
+                const detailsWithRef = await Promise.all(details.map(async (detail) => {
+                    const femaleMeasurement = await this.femaleMeasurementRepository.findOne({ where: { id: detail.femaleMeasurementId}})
+                    if (!femaleMeasurement) {
+                        throw new AppError(`Female measurement with ID ${detail.femaleMeasurementId} not found`, HttpStatus.NOT_FOUND);
+                    }
+                    return this.femaleDetailsRepository.create({
+                        ...detail,
+                        reference: saveRef,
+                        user,
+                        customer,
+                        femaleMeasurement,
+                        addedBy: user.addedBy +' '+company.companyName
+                    })
+                }));
 
-            await this.femaleDetailsRepository.save(detailsWithRef);
-            return detailsWithRef.length;
+                await transactionalEntityManager.save(FemaleDetails, detailsWithRef);
+                return { count: detailsWithRef.length, referenceId: saveRef.id };
+            });  
         } else if (method === 'PUT') {
             let updatedCount = 0;
             for (const detail of details) {
@@ -67,7 +81,8 @@ export class FemaleDetailService{
                     where: { 
                         id: detail.id, 
                         user: { id: userId }, 
-                        customer: { id: customerId } 
+                        customer: { id: customerId }, 
+                        reference: { id: detail.referenceId }, 
                     },
                 });
                 if (existingDetail) {
@@ -78,9 +93,12 @@ export class FemaleDetailService{
                             customer: { id: customerId } 
                         },
                         { 
-                            ...detail, 
+                            id: detail.id,
+                            measuredValue: Number(detail.measuredValue),
                             user: { id: userId}, 
-                            customer: { id: customerId } 
+                            customer: { id: customerId },
+                            femaleMeasurement: { id: detail.femaleMeasurementId }, 
+                            reference: {id: detail.referenceId }, 
                         },
                     );
                     updatedCount++;
@@ -89,7 +107,7 @@ export class FemaleDetailService{
             if (updatedCount === 0) {
                 throw new AppError('No details updated', HttpStatus.NOT_FOUND);
             }
-            return updatedCount;
+            return { count: updatedCount };
         } else {
             throw new AppError('Invalid method. Use POST or PUT', HttpStatus.BAD_REQUEST);
         }
@@ -103,14 +121,20 @@ export class FemaleDetailService{
             if (!userId) {
                 throw new AppError('User ID is required', HttpStatus.BAD_REQUEST);
             }
-
+            const references = await this.referenceRepository.find({
+                where: {
+                    customer: { id: customerId }, 
+                    user: { id: userId }, 
+                }
+            })
             const details = await this.femaleDetailsRepository.find({
                 where: { 
                     customer: { id: customerId },
-                    user: { id: userId }
+                    user: { id: userId },
+                    reference: { id: In(references.map(ref => ref.id)) }
                 },
                 select: ['id', 'user', 'customer', 'reference', 'femaleMeasurement', 'measuredValue'],
-                relations: ['femaleMeasurement','customer','reference'],
+                relations: { reference: true, femaleMeasurement: true },
                 relationLoadStrategy: 'query',
                 loadEagerRelations: false,
             });
@@ -122,7 +146,7 @@ export class FemaleDetailService{
                 femaleMeasurement: detail.femaleMeasurement ? { id: detail.femaleMeasurement.id, name: detail.femaleMeasurement.name } : null,
             })) : [];
 
-            return { count: details.length, data};
+            return { count: details.length, data };
         } catch (error) {
             logger.error(error);
             throw error instanceof AppError

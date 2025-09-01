@@ -6,20 +6,47 @@ import { HttpStatus } from '../utils/constants.js';
 import { AppError } from '../utils/errors.js';
 import { LoginRequest } from '../models/model.js'
 import { DefaultService } from '../services/DefaultService.js';
-import { isEmpty } from 'class-validator';
+import { isEmpty, validate } from 'class-validator';
 import { logger } from '../utils/logger.js';
 import { User } from '../entities/User.js';
+import { UserValidator } from '../utils/validators.js';
+import { plainToInstance } from 'class-transformer';
 
 export class AuthController{
     private readonly userRepository: Repository<User>;
     private readonly authService:AuthService;
     private readonly ds:DefaultService;
 
-        constructor(dataSource: DataSource) {
-            this.authService = new AuthService(dataSource);
-            this.userRepository = dataSource.getRepository(User);
-            this.ds = new DefaultService(dataSource);
+    constructor(dataSource: DataSource) {
+        this.authService = new AuthService(dataSource);
+        this.userRepository = dataSource.getRepository(User);
+        this.ds = new DefaultService(dataSource);
+    }
+
+    async registerUser(req: Request, res: Response, next: NextFunction) {
+        try {
+            const user = {} as any;
+            Object.assign(user, req.body);
+            const userDto = plainToInstance(UserValidator, user);
+            const errors = await validate(userDto);
+            if (errors.length > 0) {
+                throw new AppError(`failed: ${errors}`, HttpStatus.BAD_REQUEST);
+            }
+            if(!user.companyName){
+              throw new AppError('CompanyName is required', HttpStatus.BAD_REQUEST);
+            }
+            const { companyName, ...rest } = user;
+            const result = await this.authService.save(rest as User, companyName);
+
+            res.status(HttpStatus.CREATED).json({
+                message: 'User added successfully',
+                data: result,
+            });
+        } catch (error) {
+            logger.error(error);
+            next(error);
         }
+    }
 
     async loginUser(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {

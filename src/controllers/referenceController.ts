@@ -24,7 +24,7 @@ export class ReferenceController{
                 throw new AppError(`Validation failed: ${errors}`, HttpStatus.BAD_REQUEST);
             }
 
-            const userId = req.headers['userid']?.toString();
+            const userId = req.headers['X-User-Id']?.toString();
             if (!userId) {
                 throw new AppError('UserId is required in headers', HttpStatus.BAD_REQUEST);
             }
@@ -68,7 +68,7 @@ export class ReferenceController{
      async getReferencesByCustomer(req: Request, res: Response, next: NextFunction) {
         try {
             const { customerId } = req.params;
-            const userId = req.headers['userid']?.toString();
+            const userId = req.headers['X-User-Id']?.toString();
 
             if (!customerId) {
                 throw new AppError('Customer ID is required', HttpStatus.BAD_REQUEST);
@@ -93,7 +93,7 @@ export class ReferenceController{
     async getRefById(req: Request, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;
-            const userId = req.headers['userid']?.toString();
+            const userId = req.headers['X-User-Id']?.toString();
 
             if (!id) {
                 throw new AppError('Reference ID is required', HttpStatus.BAD_REQUEST);
@@ -106,7 +106,7 @@ export class ReferenceController{
                 data: result,
             });
         } catch (error) {
-            logger.error('Failed to fetch reference by ID', { error, id: req.params.id, userId: req.headers['userid'] });
+            logger.error('Failed to fetch reference by ID', { error, id: req.params.id, userId: req.headers['X-User-Id'] });
             next(error);
         }
     }

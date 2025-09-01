@@ -15,57 +15,6 @@ export class UserController{
     this.userService = new UserService(dataSource);
   }
 
-    async save2(req:Request, res:Response, next:NextFunction){
-        try {
-            const user = req.body;
-            const userDto = plainToInstance(UserValidator, user);
-            const errors = await validate(userDto);
-            if (errors.length > 0) {
-                const errorMessages = errors
-                .map(err => Object.values(err.constraints || {}).join(', '))
-                .join('; ');
-                logger.warn({ errors: errorMessages });
-                throw new AppError(`${errorMessages}`, HttpStatus.BAD_REQUEST);
-            }
-            if(!user.companyName){
-              throw new AppError('CompanyName is required', HttpStatus.BAD_REQUEST);
-            }
-            const { companyName, ...rest } = user;
-            const result = await this.userService.save(rest, companyName);
-            res.json({
-                message: 'User created successfully. Please verify your account with the OTP sent, OTP expires after 10 munites',
-                data: result,
-            });
-        } catch (error) {
-            next(error);
-        }
-    }
-
-    async save(req: Request, res: Response, next: NextFunction) {
-        try {
-            const user = {} as any;
-            Object.assign(user, req.body);
-            const userDto = plainToInstance(UserValidator, user);
-            const errors = await validate(userDto);
-            if (errors.length > 0) {
-                throw new AppError(`failed: ${errors}`, HttpStatus.BAD_REQUEST);
-            }
-            if(!user.companyName){
-              throw new AppError('CompanyName is required', HttpStatus.BAD_REQUEST);
-            }
-            const { companyName, ...rest } = user;
-            const result = await this.userService.save(rest as User, companyName);
-
-            res.status(HttpStatus.CREATED).json({
-                message: 'User added successfully',
-                data: result,
-            });
-        } catch (error) {
-            logger.error(error);
-            next(error);
-        }
-    }
-
     async getUsers(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
         const users = await this.userService.getUsers();

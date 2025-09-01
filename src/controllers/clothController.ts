@@ -8,6 +8,7 @@ import { AppError } from "../utils/errors.js";
 import { logger } from "../utils/logger.js";
 import { ClothImageService } from '../services/clothImageService.js';
 import { ClothImage } from '../entities/ClothImage.js';
+import { DefaultService } from '../services/DefaultService.js';
 
 export class ClothController{
     private readonly clothImageService: ClothImageService;
@@ -20,7 +21,7 @@ export class ClothController{
     async create(req: Request, res: Response, next: NextFunction) {
         try {
             const { id, customerId, referenceId } = req.body;
-            const userId = req.headers['userid']?.toString();
+            const userId = req.headers['X-User-Id']?.toString();
 
             if (!userId) {
                 throw new AppError('UserId is required in headers', HttpStatus.BAD_REQUEST);
@@ -39,7 +40,7 @@ export class ClothController{
             if (req.file.size > maxSize) {
                 throw new AppError('File size exceeds 5MB limit', HttpStatus.BAD_REQUEST);
             }
-
+          
             const result = await this.clothImageService.createOrUpdateImage({
                 id,
                 customerId,
@@ -61,21 +62,21 @@ export class ClothController{
     async getImage(req: Request, res: Response, next: NextFunction){
         try {
             const { customerId,referenceId } = req.params; 
-            const userId = req.headers['userid']?.toString();
+            const userId = req.headers['X-User-Id']?.toString();
             if(!userId){
                 throw new AppError('UserId is required in headers', HttpStatus.BAD_REQUEST);
             }
-            const images = await this.clothRepository.findOne({
+            const images = await this.clothRepository.find({
                 where: {
                     customer: { id: customerId },
                     reference: { id: referenceId },
                     user: { id: userId }
                 },
                 select: ['id', 'imageUrl'],
-                relations: ['customer', 'reference'],
+                relations: { reference: true, customer: true },
             });
             res.status(HttpStatus.OK).json({
-                message: 'Image fetched successfully',
+                message: 'Images fetched successfully',
                 data: images,
             });
         } catch (error) {
@@ -118,7 +119,7 @@ export class ClothController{
     async delete(req: Request, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;
-            const userId = req.headers['userid']?.toString();
+            const userId = req.headers['X-User-Id']?.toString();
             if(!userId){
                 throw new AppError('UserId is required to delete image', HttpStatus.BAD_REQUEST);
             }

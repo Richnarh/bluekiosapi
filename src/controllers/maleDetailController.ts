@@ -15,7 +15,7 @@ export class MaleDetailController {
         try {
             const details = req.body;
             const { customerId } = req.params;
-            const userId = req.headers['userid']?.toString();
+            const userId = req.headers['X-User-Id']?.toString();
             if (!userId) {
                 throw new AppError('UserId is required in headers', HttpStatus.BAD_REQUEST);
             }
@@ -41,7 +41,7 @@ export class MaleDetailController {
     async fetchMaleDetailsByCustomerId(req: Request, res: Response, next: NextFunction) {
         try {
             const { customerId } = req.params;
-            const userId = req.headers['userid']?.toString();
+            const userId = req.headers['X-User-Id']?.toString();
 
             if (!customerId) {
                 throw new AppError('Customer ID is required', HttpStatus.BAD_REQUEST);
@@ -66,7 +66,7 @@ export class MaleDetailController {
     async deleteDetails(req: Request, res: Response, next: NextFunction){
         try {
             const { referenceId } = req.params;
-            const userId = req.headers['userId']?.toString();
+            const userId = req.headers['X-User-Id']?.toString();
             if(!referenceId){
                 throw new AppError('referenceId is required', HttpStatus.BAD_REQUEST);
             }

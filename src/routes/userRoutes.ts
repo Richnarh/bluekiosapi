@@ -1,5 +1,4 @@
 import express from 'express';
-import { authMiddleware } from '../middleware/authMiddleware.js';
 import { UserController } from '../controllers/userController.js';
 import { DataSource } from 'typeorm';
 
@@ -7,11 +6,11 @@ const router = express.Router();
 export const setupUserRoutes = (dataSource: DataSource) => {
     const userController = new UserController(dataSource);
 
-    router.post('/', userController.save.bind(userController));
-    router.get('/', authMiddleware, userController.getUsers.bind(userController));
-    router.get('/:id', authMiddleware, userController.getUserById.bind(userController));
-    router.put('/:id', authMiddleware, userController.updateUser.bind(userController));
-    router.delete('/:id', authMiddleware, userController.deleteUser.bind(userController));
+    // router.post('/', userController.save.bind(userController));
+    router.get('/', userController.getUsers.bind(userController));
+    router.get('/:id', userController.getUserById.bind(userController));
+    router.put('/:id', userController.updateUser.bind(userController));
+    router.delete('/:id', userController.deleteUser.bind(userController));
 
   return router;
 }

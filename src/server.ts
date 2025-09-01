@@ -1,10 +1,12 @@
-import express from 'express';
+import express, { NextFunction,Request,Response } from 'express';
 import { DataSource } from 'typeorm';
 import cors from 'cors'
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
-
+import path from 'path';
+import { fileURLToPath } from 'url';
 import swaggerUi from 'swagger-ui-express';
+
 import { initializeDatabase } from './config/dataSource.js';
 import { logger } from './utils/logger.js';
 import { errorMiddleware } from './middleware/errorMiddleware.js';
@@ -21,9 +23,13 @@ import { setupFemaleDetailsRoutes } from './routes/femaleDetailRoutes.js';
 import { setupPaymentInfoRoutes } from './routes/payment.routes.js';
 import { setupReferenceRoutes } from './routes/referenceRoutes.js';
 import { IsUniqueConstraint } from './utils/validators.js';
+import { authMiddleware } from './middleware/authMiddleware.js';
 
 const createApp = async (): Promise<express.Application> => {
   const dataSource: DataSource = await initializeDatabase();
+
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
 
   const app = express();
   const baseApi = '/api/v1'
@@ -31,7 +37,7 @@ const createApp = async (): Promise<express.Application> => {
     origin: '*',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'UserId'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id'],
   };
 
   app.use(express.json());
@@ -40,6 +46,19 @@ const createApp = async (): Promise<express.Application> => {
   app.use(helmet());
   app.use(cors(corsOptions));
   app.use(`${baseApi}/docs`, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  app.use('/uploads/:company', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { company } = req.params;
+      const sanitizedCompany = company.replace(/\s/g, '');
+      req.url = req.path.replace(`/uploads/${sanitizedCompany}`, '');
+      const staticPath = path.join(__dirname, `../public/uploads/${sanitizedCompany}`);
+      express.static(staticPath)(req, res, next);
+    } catch (error) {
+      console.error('Error fetching company:', error);
+      res.status(500).send('Internal server error');
+      next(error);
+    }
+  });
 
   app.use((req, res, next) => {
     logger.info(`${req.method} ${req.url}`);
@@ -63,6 +82,7 @@ const createApp = async (): Promise<express.Application> => {
   Object.entries(routeConfigs).forEach(([path, setup]) => {
     app.use(`${baseApi}/${path}`, setup());
   });
+  app.use(authMiddleware);
   app.use(errorMiddleware);
   IsUniqueConstraint.initialize(dataSource);
   return app;

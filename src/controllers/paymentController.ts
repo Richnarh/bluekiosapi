@@ -6,13 +6,17 @@ import { AppError } from "../utils/errors.js";
 import { logger } from "../utils/logger.js";
 import { isEmpty } from "class-validator";
 import { PaymentInfo } from "../entities/PaymentInfo.js";
+import { DefaultService } from "../services/DefaultService.js";
 
 export class PaymentController{
-    private readonly paymentRepository:Repository<PaymentInfo>
+    private readonly paymentRepository:Repository<PaymentInfo>;
+    private readonly ds:DefaultService;
     constructor(dataSource:DataSource){
         this.paymentRepository = dataSource.getRepository(PaymentInfo);
+        this.ds = new DefaultService(dataSource);
     }
-    public create = async (req: Request, res: Response, next:NextFunction) => {
+
+    public savePaymentInfo = async (req: Request, res: Response, next:NextFunction) => {
         try {
             const payment = req.body;
             if(isEmpty(payment.customerId)){
@@ -27,8 +31,14 @@ export class PaymentController{
             if (payment.date) {
                 payment.date = new Date(payment.date);
             }
-            const result = await this.paymentRepository.save(payment);
-            res.status(HttpStatus.CREATED).json(result);
+            const user = await this.ds.getUserById(payment.userId);
+            const customer = await this.ds.getCustomerById(payment.customerId);
+            const reference = await this.ds.getReferenceById(payment.referenceId);
+            
+            const paymentInfo = { ...payment, user, customer, reference };
+            const payload = this.paymentRepository.create(paymentInfo);
+            const result = await this.paymentRepository.save(payload);
+            res.status(req.method === 'POST' ? HttpStatus.CREATED : HttpStatus.OK).json(result);
         } catch (error) {
             logger.error(error);
             next(error);
@@ -38,7 +48,7 @@ export class PaymentController{
     async getPaymentsByCustomer (req: Request, res: Response, next: NextFunction){
         try {
             const { customerId, } = req.params;  
-            const userId = req.headers['userid']?.toString();
+            const userId = req.headers['X-User-Id']?.toString();
             const result = await this.paymentRepository.find({
                 where: { 
                     customer: { id: customerId },
@@ -55,7 +65,7 @@ export class PaymentController{
     async getPaymentsByReference (req: Request, res: Response, next: NextFunction){
         try {
             const { referenceId, customerId } = req.params;  
-            const userId = req.headers['userid']?.toString();
+            const userId = req.headers['X-User-Id']?.toString();
             const result = await this.paymentRepository.findOne({
                 where: { 
                     reference: { id: referenceId },

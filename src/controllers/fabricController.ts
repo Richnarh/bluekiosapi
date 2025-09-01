@@ -5,17 +5,19 @@ import { logger } from "../utils/logger.js";
 import { isEmpty } from "class-validator";
 import { DataSource, Repository } from "typeorm";
 import { Fabric } from "../entities/Fabric.js";
+import { DefaultService } from "../services/DefaultService.js";
 
 export class FabricController{
     private readonly fabricRepository:Repository<Fabric>;
+    private readonly ds:DefaultService;
     constructor(datasource:DataSource){
         this.fabricRepository = datasource.getRepository(Fabric);
+        this.ds = new DefaultService(datasource);
     }
     
     async create(req:Request, res:Response, next:NextFunction){
         try {
             const fabric = req.body;
-            let result;
             if(isEmpty(fabric.customerId)){
                 throw new AppError('CustomerId is required', HttpStatus.BAD_REQUEST);
             }
@@ -28,11 +30,13 @@ export class FabricController{
             if(fabric.completedDate){
                 fabric.completedDate = new Date(fabric.completedDate);
             }
-            if(!fabric.id){
-                result = await this.fabricRepository.save(fabric);
-            }else{
-                result = await this.fabricRepository.save(fabric)
-            }
+            const user = await this.ds.getUserById(fabric.userId);
+            const customer = await this.ds.getCustomerById(fabric.customerId);
+            const reference = await this.ds.getReferenceById(fabric.referenceId);
+            
+            const newFabs = { ...fabric, user, customer, reference };
+            const payload = this.fabricRepository.create(newFabs);
+            const result = await this.fabricRepository.save(payload)
             res.status(fabric.id ? HttpStatus.OK : HttpStatus.CREATED).json({
                 message: `${fabric.fabricName} ${fabric.id ? 'updated' : 'added'} successfully.`,
                 data: result,
@@ -45,7 +49,7 @@ export class FabricController{
 
     async getAllFabric(req:Request, res:Response, next:NextFunction){
         try {
-            const userId = req.headers['userid']?.toString();
+            const userId = req.headers['X-User-Id']?.toString();
             const result = await this.fabricRepository.find({ 
                 where: { 
                     user: { id: userId }
