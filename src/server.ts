@@ -30,7 +30,7 @@ const createApp = async (): Promise<express.Application> => {
   const corsOptions = {
     origin: '*',
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'UserId'],
   };
 
@@ -42,7 +42,7 @@ const createApp = async (): Promise<express.Application> => {
   app.use(`${baseApi}/docs`, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
   app.use((req, res, next) => {
-    logger.info(`${req.method} ${baseApi}${req.url}`);
+    logger.info(`${req.method} ${req.url}`);
     next();
   });
 

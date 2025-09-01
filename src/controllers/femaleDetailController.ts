@@ -32,19 +32,19 @@ export class FemaleDetailController {
         }
     }
 
-    async getAllDetails(req: Request, res: Response, next: NextFunction) {
+    async fetchFemaleDetailsByCustomerId(req: Request, res: Response, next: NextFunction) {
         try {
-            const { referenceId } = req.params;
+            const { customerId } = req.params;
             const userId = req.headers['userid']?.toString();
 
-            if (!referenceId) {
+            if (!customerId) {
                 throw new AppError('Reference ID is required', HttpStatus.BAD_REQUEST);
             }
             if (!userId) {
                 throw new AppError('UserId is required in headers', HttpStatus.BAD_REQUEST);
             }
 
-            const result = await this.femaleDetailsService.getAllDetails(referenceId, userId);
+            const result = await this.femaleDetailsService.getAllDetails(customerId, userId);
 
             res.status(HttpStatus.OK).json({
                 message: 'Female details fetched successfully',

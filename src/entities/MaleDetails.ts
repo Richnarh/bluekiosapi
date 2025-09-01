@@ -25,4 +25,7 @@ export class MaleDetails extends BaseModel {
   @ManyToOne(() => Reference, (reference) => reference.maleDetails)
   @JoinColumn({ name: 'references', referencedColumnName: 'id' })
   reference?: Reference;
+
+  maleMeasurementId?:string;
+  referenceId?:string;
 }

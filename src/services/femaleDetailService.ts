@@ -109,20 +109,22 @@ export class FemaleDetailService{
                     customer: { id: customerId },
                     user: { id: userId }
                 },
-                select: ['id', 'user', 'customer', 'reference', 'measuredValue','addedBy'],
+                select: ['id', 'user', 'customer', 'reference', 'femaleMeasurement', 'measuredValue'],
                 relations: ['femaleMeasurement','customer','reference'],
                 relationLoadStrategy: 'query',
                 loadEagerRelations: false,
             });
 
-            return details.map(detail => ({
-                ...detail,
-                femaleMeasurement: detail.femaleMeasurement
-                    ? { id: detail.femaleMeasurement.id, name: detail.femaleMeasurement.name }
-                    : null,
-            }));
+            const data = details ? details.map(detail => ({
+                id: detail.id,
+                measuredValue: detail.measuredValue,
+                referenceId: detail.reference?.id,
+                femaleMeasurement: detail.femaleMeasurement ? { id: detail.femaleMeasurement.id, name: detail.femaleMeasurement.name } : null,
+            })) : [];
+
+            return { count: details.length, data};
         } catch (error) {
-            logger.error('Failed to fetch female details', { error, customerId, userId });
+            logger.error(error);
             throw error instanceof AppError
                 ? error
                 : new AppError('Failed to fetch details', HttpStatus.INTERNAL_SERVER_ERROR);

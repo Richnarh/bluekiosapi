@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, JoinColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, JoinColumn, OneToOne } from 'typeorm';
 import { BaseModel } from './BaseModel.js';
 import { User } from './User.js';
 
@@ -10,7 +10,7 @@ export class RefreshToken extends BaseModel {
   @Column({ name: 'expires_at', type: 'date' })
   expiresAt?: Date;
 
-  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @OneToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'users' })
   user?: User;
 }

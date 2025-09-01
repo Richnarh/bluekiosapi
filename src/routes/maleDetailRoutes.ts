@@ -6,9 +6,9 @@ const router = express.Router();
 
 export const setupMaleDetailRoutes = (dataSource:DataSource) => {
     const controller = new MaleDetailController(dataSource);
-    router.post('/:userId', controller.save.bind(controller));
-    router.put('/:userId', controller.save.bind(controller));
-    router.get('/:referenceId/refs', controller.fetchAll.bind(controller));
+    router.post('/:customerId', controller.saveAllDetailsBycustomerId.bind(controller));
+    router.put('/:customerId', controller.saveAllDetailsBycustomerId.bind(controller));
+    router.get('/:customerId/details', controller.fetchMaleDetailsByCustomerId.bind(controller));
     router.delete('/:referenceId', controller.deleteDetails.bind(controller));
     return router;
 }

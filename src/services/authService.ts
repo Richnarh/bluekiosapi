@@ -96,6 +96,7 @@ export class AuthService{
       refreshToken.token = hashedToken;
       refreshToken.expiresAt = expiresAt;
       refreshToken.addedBy = user?.emailAddress;
+      await this.tokenRepository.delete({ user: { id }});
       await this.tokenRepository.save(refreshToken);
       logger.info('Refresh token created successfully', { tokenId: refreshToken.id });
       return token;
@@ -211,7 +212,8 @@ async verifyUser(id: string){
         code: code,
         expiresAt: MoreThanOrEqual(new Date()),
       }
-    })
+    });
+
     if (!otp){
         throw new AppError('Invalid or expired OTP', HttpStatus.BAD_REQUEST);
     }

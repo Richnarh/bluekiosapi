@@ -11,11 +11,11 @@ export class MaleDetailController {
         this.maleDetailsService = new MaleDetailService(dataSource);
     }
 
-    async save(req: Request, res: Response, next: NextFunction) {
+    async saveAllDetailsBycustomerId(req: Request, res: Response, next: NextFunction) {
         try {
-            const { details, method } = req.body;
-            const { userId, customerId } = req.params;
-
+            const details = req.body;
+            const { customerId } = req.params;
+            const userId = req.headers['userid']?.toString();
             if (!userId) {
                 throw new AppError('UserId is required in headers', HttpStatus.BAD_REQUEST);
             }
@@ -29,7 +29,7 @@ export class MaleDetailController {
             const result = await this.maleDetailsService.save(details, req.method, userId, customerId);
 
             res.status(HttpStatus.OK).json({
-                message: `${method === 'POST' ? 'Created' : 'Updated'} ${result.count} male details successfully`,
+                message: `${req.method === 'POST' ? 'Created' : 'Updated'} ${result.count} male details successfully`,
                 data: result,
             });
         } catch (error) {
@@ -38,7 +38,7 @@ export class MaleDetailController {
         }
     }
 
-    async fetchAll(req: Request, res: Response, next: NextFunction) {
+    async fetchMaleDetailsByCustomerId(req: Request, res: Response, next: NextFunction) {
         try {
             const { customerId } = req.params;
             const userId = req.headers['userid']?.toString();

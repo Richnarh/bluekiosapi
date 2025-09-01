@@ -6,9 +6,6 @@ import { MaleDetails } from './MaleDetails.js';
 
 @Entity('male_measurements')
 export class MaleMeasurement extends BaseModel {
-//   @Column({ name: 'user_id', type: 'varchar', length: 255 })
-//   userId: string;
-
   @Column({ type: 'varchar', length: 255 })
   name?: string;
 
@@ -19,7 +16,7 @@ export class MaleMeasurement extends BaseModel {
   status?: boolean;
 
   @ManyToOne(() => User, (user) => user.maleMeasurement)
-  @JoinColumn({ name: 'user_id' })
+  @JoinColumn({ name: 'users' })
   user?: User;
 
   @OneToMany(() => MaleDetails, (customerDetails) => customerDetails.maleMeasurement)

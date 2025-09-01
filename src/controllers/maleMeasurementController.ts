@@ -3,30 +3,32 @@ import { NextFunction, Request, Response } from "express";
 import { HttpStatus } from "../utils/constants.js";
 import { AppError } from "../utils/errors.js";
 import { logger } from "../utils/logger.js";
-import { isEmpty } from "class-validator";
 import { MeasureType } from "../entities/enums.js";
 import { MaleMeasurement } from "../entities/MaleMeasurement.js";
 import { DataSource, Repository } from "typeorm";
+import { DefaultService } from "../services/DefaultService.js";
 
 export class MeasurementController{
     private maleMeasurementRepository:Repository<MaleMeasurement>;
-    
+    private readonly ds:DefaultService;
     constructor(dataSource:DataSource){
         this.maleMeasurementRepository = dataSource.getRepository(MaleMeasurement);
+        this.ds = new DefaultService(dataSource);
     }
 
     async save(req:Request, res:Response, next:NextFunction){
         try {
             const male = req.body;
-            let result;
-            const payload = { ...male, measureType: MeasureType.DEFAULT_TYPE } // change the default to custom
-            if(!isEmpty(payload.id)){
-                result = await this.maleMeasurementRepository.update(payload.id,payload)
-            }else{
-                result = await this.maleMeasurementRepository.save(payload);
+            if(!male.userId){
+                throw new AppError('UserId is required', HttpStatus.BAD_REQUEST);
             }
-            res.status(payload.id ? HttpStatus.OK : HttpStatus.CREATED).json({
-                message: `${payload.name} ${payload.id ? 'updated' : 'added'} successfully.`,
+            const user = await this.ds.getUserById(male.userId);
+            male.user = user;
+            const load = { ...male, measureType: MeasureType.DEFAULT_TYPE } // change the default to custom
+            const payload = this.maleMeasurementRepository.create(load);
+            const result = await this.maleMeasurementRepository.save(payload);
+            res.status(HttpStatus.CREATED).json({
+                message: `Action applied successfully.`,
                 data: result,
             });
         } catch (error) {
@@ -80,7 +82,7 @@ export class MeasurementController{
             const measurement = await this.maleMeasurementRepository.delete({ id });
             if (measurement) {
                 res.status(HttpStatus.OK).json({ 
-                    message: `Female Measurement deleted successfully`,
+                    message: `Male Measurement deleted successfully`,
                     id
                 });
             } else {

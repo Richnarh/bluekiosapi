@@ -7,26 +7,29 @@ import { AppError } from "../utils/errors.js";
 import { FemaleMeasurement } from "../entities/FemaleMeasurement.js";
 import { MeasureType } from "../entities/enums.js";
 import { logger } from "../utils/logger.js";
+import { DefaultService } from "../services/DefaultService.js";
 
 export class femaleMeasurementController{
     private femaleMeasurementRepository:Repository<FemaleMeasurement>;
-
+    private readonly ds:DefaultService;
     constructor(dataSource:DataSource){
         this.femaleMeasurementRepository = dataSource.getRepository(FemaleMeasurement);
+        this.ds = new DefaultService(dataSource);
     }
 
     async save(req:Request, res:Response, next:NextFunction){
         try {
             const female = req.body;
-            let result;
-            const payload = { ...female, measureType: MeasureType.DEFAULT_TYPE }
-            if(!isEmpty(payload.id)){
-                result = await this.femaleMeasurementRepository.update(payload.id,payload)
-            }else{
-                result = await this.femaleMeasurementRepository.save(payload);
+            if(!female.userId){
+                throw new AppError('UserId is required', HttpStatus.BAD_REQUEST);
             }
-            res.status(payload.id ? HttpStatus.OK : HttpStatus.CREATED).json({
-                message: `${payload.name} ${payload.id ? 'updated' : 'added'} successfully.`,
+            const user = await this.ds.getUserById(female.userId);
+            female.user = user;
+            const load = { ...female, measureType: MeasureType.DEFAULT_TYPE };
+            const payload = this.femaleMeasurementRepository.create(load);
+            const result = await this.femaleMeasurementRepository.save(payload);
+            res.status(HttpStatus.CREATED).json({
+                message: `Action applied successfully.`,
                 data: result,
             });
         } catch (error) {
@@ -56,7 +59,7 @@ export class femaleMeasurementController{
         if (femaleMeasurement) {
             res.status(HttpStatus.OK).json({ data: femaleMeasurement });
         } else {
-            throw new AppError('Male measurement not found', HttpStatus.NOT_FOUND);
+            throw new AppError('Female measurement not found', HttpStatus.NOT_FOUND);
         }
         } catch (error) {
             next(error);
@@ -86,7 +89,7 @@ export class femaleMeasurementController{
                     id
                 });
             } else {
-                throw new AppError('Measurment not found', HttpStatus.NOT_FOUND);
+                throw new AppError('female measurment not found', HttpStatus.NOT_FOUND);
             }
         } catch (error) {
             next(error);

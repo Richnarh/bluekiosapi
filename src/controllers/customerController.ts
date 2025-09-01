@@ -3,24 +3,26 @@ import { HttpStatus } from "../utils/constants.js";
 import { AppError } from "../utils/errors.js";
 import { Customer } from "../entities/Customer.js";
 import { DataSource, Repository } from "typeorm";
-import { isEmpty } from "class-validator";
+import { DefaultService } from "../services/DefaultService.js";
 
 export class CustomerController{
     private customerRepository:Repository<Customer>;
-
+    private readonly ds:DefaultService;
     constructor(dataSource:DataSource){
         this.customerRepository = dataSource.getRepository(Customer);
+        this.ds = new DefaultService(dataSource);
     }
 
     async create(req:Request, res:Response, next:NextFunction){
         try {
             const customer = req.body;
-            let result;
-            if(!isEmpty(customer.id)){
-                result = await this.customerRepository.save(customer);
-            }else{
-                result = await this.customerRepository.save(customer);
+            if(!customer.userId){
+                throw new AppError('UserId is required', HttpStatus.BAD_REQUEST);
             }
+            const user = await this.ds.getUserById(customer.userId);
+            customer.user = user;
+            const payload = this.customerRepository.create(customer);
+            const result = await this.customerRepository.save(payload);
             res.status(customer.id ? HttpStatus.OK : HttpStatus.CREATED).json({
                 message: `${customer.fullName} ${customer.id ? 'updated' : 'added'} successfully.`,
                 data: result,
