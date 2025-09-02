@@ -116,7 +116,7 @@ export class FemaleDetailService{
     async getAllDetails(customerId: string, userId: string){
         try {
             if (!customerId) {
-                throw new AppError('Reference ID is required', HttpStatus.BAD_REQUEST);
+                throw new AppError('Customer ID is required', HttpStatus.BAD_REQUEST);
             }
             if (!userId) {
                 throw new AppError('User ID is required', HttpStatus.BAD_REQUEST);
@@ -132,6 +132,42 @@ export class FemaleDetailService{
                     customer: { id: customerId },
                     user: { id: userId },
                     reference: { id: In(references.map(ref => ref.id)) }
+                },
+                select: ['id', 'user', 'customer', 'reference', 'femaleMeasurement', 'measuredValue'],
+                relations: { reference: true, femaleMeasurement: true },
+                relationLoadStrategy: 'query',
+                loadEagerRelations: false,
+            });
+
+            const data = details ? details.map(detail => ({
+                id: detail.id,
+                measuredValue: detail.measuredValue,
+                referenceId: detail.reference?.id,
+                femaleMeasurement: detail.femaleMeasurement ? { id: detail.femaleMeasurement.id, name: detail.femaleMeasurement.name } : null,
+            })) : [];
+
+            return { count: details.length, data };
+        } catch (error) {
+            logger.error(error);
+            throw error instanceof AppError
+                ? error
+                : new AppError('Failed to fetch details', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async fetchAllDetailsByRef(referenceId: string, userId: string){
+        try {
+            if (!referenceId) {
+                throw new AppError('Reference ID is required', HttpStatus.BAD_REQUEST);
+            }
+            if (!userId) {
+                throw new AppError('User ID is required', HttpStatus.BAD_REQUEST);
+            }
+            
+            const details = await this.femaleDetailsRepository.find({
+                where: { 
+                    user: { id: userId },
+                    reference: { id: referenceId }
                 },
                 select: ['id', 'user', 'customer', 'reference', 'femaleMeasurement', 'measuredValue'],
                 relations: { reference: true, femaleMeasurement: true },

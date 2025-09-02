@@ -19,7 +19,7 @@ export class FemaleDetailController {
                 throw new AppError('Invalid input data', HttpStatus.BAD_REQUEST);
             }
             const { customerId } = req.params;
-            const userId = req.headers['X-User-Id']?.toString();
+                        const userId = req.headers['x-user-id']?.toString();
             if (!userId) {
                 throw new AppError('UserId is required', HttpStatus.BAD_REQUEST);
             }
@@ -36,10 +36,35 @@ export class FemaleDetailController {
         }
     }
 
+    async fetchFemaleDetailsByReferenceId(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { referenceId } = req.params;
+            const userId = req.headers['x-user-id']?.toString();
+
+            if (!referenceId) {
+                throw new AppError('Reference ID is required', HttpStatus.BAD_REQUEST);
+            }
+            if (!userId) {
+                throw new AppError('UserId is required in headers', HttpStatus.BAD_REQUEST);
+            }
+
+            const result = await this.femaleDetailsService.fetchAllDetailsByRef(referenceId, userId);
+
+            res.status(HttpStatus.OK).json({
+                message: 'Female details fetched successfully',
+                data: result.data,
+                count: result.count,
+            });
+        } catch (error) {
+            logger.error(error);
+            next(error);
+        }
+    }
+
     async fetchFemaleDetailsByCustomerId(req: Request, res: Response, next: NextFunction) {
         try {
             const { customerId } = req.params;
-            const userId = req.headers['X-User-Id']?.toString();
+            const userId = req.headers['x-user-id']?.toString();
 
             if (!customerId) {
                 throw new AppError('Reference ID is required', HttpStatus.BAD_REQUEST);
@@ -64,7 +89,7 @@ export class FemaleDetailController {
     async deleteDetails(req: Request, res: Response, next: NextFunction) {
         try {
             const { referenceId } = req.params;
-            const userId = req.headers['X-User-Id']?.toString();
+            const userId = req.headers['x-user-id']?.toString();
 
             if (!referenceId) {
                 throw new AppError('Reference ID is required', HttpStatus.BAD_REQUEST);

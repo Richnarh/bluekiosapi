@@ -8,7 +8,7 @@ import { ClothImage } from './ClothImage.js';
 import { Fabric } from './Fabric.js';
 import { MaleDetails } from './MaleDetails.js';
 
-@Entity('references')
+@Entity('reference')
 export class Reference extends BaseModel {
   @Column({ name: 'ref_name', type: 'varchar', length: 100 })
   refName?: string;

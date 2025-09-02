@@ -49,7 +49,7 @@ export class FabricController{
 
     async getAllFabric(req:Request, res:Response, next:NextFunction){
         try {
-            const userId = req.headers['X-User-Id']?.toString();
+            const userId = req.headers['x-user-id']?.toString();
             const result = await this.fabricRepository.find({ 
                 where: { 
                     user: { id: userId }

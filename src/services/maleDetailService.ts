@@ -150,7 +150,7 @@ export class MaleDetailService{
         }
     }
 
-    async fetchAll(customerId: string, userId: string) {
+    async fetchAllDetailsByCustomer(customerId: string, userId: string) {
         try {
             if (!customerId) {
                 throw new AppError('Customer ID is required', HttpStatus.BAD_REQUEST);
@@ -171,6 +171,42 @@ export class MaleDetailService{
                     customer: { id: customerId }, 
                     user: { id: userId }, 
                     reference: { id: In(references.map((ref) => ref.id)) },
+                },
+                select: ['id', 'reference', 'maleMeasurement', 'measuredValue'],
+                relations: { reference: true, maleMeasurement: true },
+                relationLoadStrategy: 'query',
+                loadEagerRelations: false,
+            });
+            
+            const data = details ? details.map(detail => ({
+                id: detail.id,
+                measuredValue: detail.measuredValue,
+                referenceId: detail.reference?.id,
+                maleMeasurement: detail.maleMeasurement ? { id: detail.maleMeasurement.id, name: detail.maleMeasurement.name } : null,
+            })) : []
+
+            return { count: details.length, data};
+        } catch (error) {
+            logger.error(error);
+            throw error instanceof AppError
+                ? error
+                : new AppError('Failed to fetch details', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async fetchAllDetailsByRef(referenceId: string, userId: string) {
+        try {
+            if (!referenceId) {
+                throw new AppError('Customer ID is required', HttpStatus.BAD_REQUEST);
+            }
+            if (!userId) {
+                throw new AppError('User ID is required', HttpStatus.BAD_REQUEST);
+            }
+
+            const details = await this.maleDetailsRepository.find({
+                where: { 
+                    user: { id: userId }, 
+                    reference: { id: referenceId },
                 },
                 select: ['id', 'reference', 'maleMeasurement', 'measuredValue'],
                 relations: { reference: true, maleMeasurement: true },

@@ -48,7 +48,7 @@ export class PaymentController{
     async getPaymentsByCustomer (req: Request, res: Response, next: NextFunction){
         try {
             const { customerId, } = req.params;  
-            const userId = req.headers['X-User-Id']?.toString();
+            const userId = req.headers['x-user-id']?.toString();
             const result = await this.paymentRepository.find({
                 where: { 
                     customer: { id: customerId },
@@ -65,7 +65,7 @@ export class PaymentController{
     async getPaymentsByReference (req: Request, res: Response, next: NextFunction){
         try {
             const { referenceId, customerId } = req.params;  
-            const userId = req.headers['X-User-Id']?.toString();
+                        const userId = req.headers['x-user-id']?.toString();
             const result = await this.paymentRepository.findOne({
                 where: { 
                     reference: { id: referenceId },

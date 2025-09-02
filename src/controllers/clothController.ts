@@ -21,7 +21,7 @@ export class ClothController{
     async create(req: Request, res: Response, next: NextFunction) {
         try {
             const { id, customerId, referenceId } = req.body;
-            const userId = req.headers['X-User-Id']?.toString();
+                        const userId = req.headers['x-user-id']?.toString();
 
             if (!userId) {
                 throw new AppError('UserId is required in headers', HttpStatus.BAD_REQUEST);
@@ -62,7 +62,7 @@ export class ClothController{
     async getImage(req: Request, res: Response, next: NextFunction){
         try {
             const { customerId,referenceId } = req.params; 
-            const userId = req.headers['X-User-Id']?.toString();
+                        const userId = req.headers['x-user-id']?.toString();
             if(!userId){
                 throw new AppError('UserId is required in headers', HttpStatus.BAD_REQUEST);
             }
@@ -119,7 +119,7 @@ export class ClothController{
     async delete(req: Request, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;
-            const userId = req.headers['X-User-Id']?.toString();
+            const userId = req.headers['x-user-id']?.toString();
             if(!userId){
                 throw new AppError('UserId is required to delete image', HttpStatus.BAD_REQUEST);
             }

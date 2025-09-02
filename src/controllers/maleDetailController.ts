@@ -15,7 +15,7 @@ export class MaleDetailController {
         try {
             const details = req.body;
             const { customerId } = req.params;
-            const userId = req.headers['X-User-Id']?.toString();
+                        const userId = req.headers['x-user-id']?.toString();
             if (!userId) {
                 throw new AppError('UserId is required in headers', HttpStatus.BAD_REQUEST);
             }
@@ -41,7 +41,7 @@ export class MaleDetailController {
     async fetchMaleDetailsByCustomerId(req: Request, res: Response, next: NextFunction) {
         try {
             const { customerId } = req.params;
-            const userId = req.headers['X-User-Id']?.toString();
+            const userId = req.headers['x-user-id']?.toString();
 
             if (!customerId) {
                 throw new AppError('Customer ID is required', HttpStatus.BAD_REQUEST);
@@ -50,7 +50,32 @@ export class MaleDetailController {
                 throw new AppError('UserId is required in headers', HttpStatus.BAD_REQUEST);
             }
 
-            const result = await this.maleDetailsService.fetchAll(customerId, userId);
+            const result = await this.maleDetailsService.fetchAllDetailsByCustomer(customerId, userId);
+
+            res.status(HttpStatus.OK).json({
+                message: 'Male details fetched successfully',
+                data: result.data,
+                count: result.count,
+            });
+        } catch (error) {
+            logger.error(error);
+            next(error);
+        }
+    }
+
+    async fetchMaleDetailsByReferenceId(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { referenceId } = req.params;
+            const userId = req.headers['x-user-id']?.toString();
+
+            if (!referenceId) {
+                throw new AppError('Reference ID is required', HttpStatus.BAD_REQUEST);
+            }
+            if (!userId) {
+                throw new AppError('UserId is required in headers', HttpStatus.BAD_REQUEST);
+            }
+
+            const result = await this.maleDetailsService.fetchAllDetailsByRef(referenceId, userId);
 
             res.status(HttpStatus.OK).json({
                 message: 'Male details fetched successfully',
@@ -66,7 +91,7 @@ export class MaleDetailController {
     async deleteDetails(req: Request, res: Response, next: NextFunction){
         try {
             const { referenceId } = req.params;
-            const userId = req.headers['X-User-Id']?.toString();
+                        const userId = req.headers['x-user-id']?.toString();
             if(!referenceId){
                 throw new AppError('referenceId is required', HttpStatus.BAD_REQUEST);
             }

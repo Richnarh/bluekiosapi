@@ -100,14 +100,24 @@ export class ReferenceService{
 
             return { count: references.length, data };
         } catch (error) {
-            logger.error('Failed to fetch references', { error, userId, customerId });
+            logger.error(error);
             throw error instanceof AppError
                 ? error
                 : new AppError('Failed to fetch references', HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }   
-
-    async getReferencesByCustomer(customerId: string, userId: string): Promise<{ count: number; data:any }> {
+    async getReferencesByCustomer(customerId:string, userId:string){
+        return await this.referenceRepository.find({
+            where: { 
+                customer: { id: customerId },
+                user: { id: userId } 
+            },
+            select: ['id', 'refName'],
+            relations: { fabric: true },
+            relationLoadStrategy: 'query',
+        });
+    }
+    async getReferencesByCustomer2(customerId: string, userId: string): Promise<{ count: number; data:any }> {
         try {
             if (!customerId) {
                 throw new AppError('Customer ID is required', HttpStatus.BAD_REQUEST);

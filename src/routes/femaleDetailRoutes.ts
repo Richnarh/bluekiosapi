@@ -9,6 +9,7 @@ export const setupFemaleDetailsRoutes = (dataSource:DataSource) =>{
     router.post('/:customerId', controller.saveAllDetailsBycustomerId.bind(controller));
     router.put('/:customerId', controller.saveAllDetailsBycustomerId.bind(controller));
     router.get('/:customerId/details', controller.fetchFemaleDetailsByCustomerId.bind(controller));
+    router.get('/:referenceId/references', controller.fetchFemaleDetailsByReferenceId.bind(controller));
     router.delete('/:referenceId', controller.deleteDetails.bind(controller));
     return router;
 }

@@ -16,7 +16,7 @@ export const setupClothImageRoutes = (dataSource: DataSource) => {
 const storage = multer.diskStorage({
    destination: async (req:Request, file, cb) => {
 
-    const userId = req.headers['X-User-Id']?.toString();
+                const userId = req.headers['x-user-id']?.toString();
     if(!userId){
         throw new AppError('UserId is required in headers', HttpStatus.BAD_REQUEST);
     }
