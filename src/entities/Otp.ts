@@ -11,6 +11,6 @@ export class Otp extends BaseModel {
   expiresAt?: Date;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'users' })
+  @JoinColumn({ name: 'userId' })
   user?: User;
 }

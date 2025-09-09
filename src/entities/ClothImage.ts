@@ -9,15 +9,15 @@ export class ClothImage extends BaseModel {
   @Column({ name: 'image_url', type: 'text' })
   imageUrl?: string;
   
-  @ManyToOne(() => Customer, (customer) => customer.clothImage)
-  @JoinColumn({ name: 'customers' })
+  @ManyToOne(() => Customer)
+  @JoinColumn({ name: 'customerId' })
   customer?: Customer;
 
-  @ManyToOne(() => User, (user) => user.clothImage)
-  @JoinColumn({ name: 'users' })
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'userId' })
   user?: User;
 
-  @ManyToOne(() => Reference, (reference) => reference.clothImage)
-  @JoinColumn({ name: 'references' })
+  @ManyToOne(() => Reference)
+  @JoinColumn({ name: 'referenceId' })
   reference?: Reference;
 }

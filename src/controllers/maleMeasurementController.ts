@@ -3,7 +3,7 @@ import { NextFunction, Request, Response } from "express";
 import { HttpStatus } from "../utils/constants.js";
 import { AppError } from "../utils/errors.js";
 import { logger } from "../utils/logger.js";
-import { MeasureType } from "../entities/enums.js";
+import { MeasureType } from "../models/enums.js";
 import { MaleMeasurement } from "../entities/MaleMeasurement.js";
 import { DataSource, Repository } from "typeorm";
 import { DefaultService } from "../services/DefaultService.js";

@@ -1,8 +1,7 @@
-import { Column, Entity, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
+import { Column, Entity, ManyToOne, JoinColumn } from 'typeorm';
 import { BaseModel } from './BaseModel.js';
 import { User } from './User.js';
-import { MeasureType } from './enums.js';
-import { MaleDetails } from './MaleDetails.js';
+import { MeasureType } from '../models/enums.js';
 
 @Entity('male_measurements')
 export class MaleMeasurement extends BaseModel {
@@ -15,10 +14,7 @@ export class MaleMeasurement extends BaseModel {
   @Column({ type: 'boolean', default: false })
   status?: boolean;
 
-  @ManyToOne(() => User, (user) => user.maleMeasurement)
-  @JoinColumn({ name: 'users' })
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'userId' })
   user?: User;
-
-  @OneToMany(() => MaleDetails, (customerDetails) => customerDetails.maleMeasurement)
-  customerDetails?: MaleDetails[];
 }

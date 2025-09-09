@@ -10,20 +10,20 @@ export class MaleDetails extends BaseModel {
 @Column({ name: 'measured_value', type: 'decimal', precision: 10, scale: 2 })
   measuredValue?: number;
 
-  @ManyToOne(() => User, (user) => user.maleDetails)
-  @JoinColumn({ name: 'users' })
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'userId' })
   user?: User;
 
-  @ManyToOne(() => Customer, (customer) => customer.maleDetails)
-  @JoinColumn({ name: 'customers' })
+  @ManyToOne(() => Customer)
+  @JoinColumn({ name: 'customerId' })
   customer?: Customer;
 
-  @ManyToOne(() => MaleMeasurement, (maleMeasurement) => maleMeasurement.customerDetails)
-  @JoinColumn({ name: 'male_measurements', referencedColumnName: 'id' })
+  @ManyToOne(() => MaleMeasurement)
+  @JoinColumn({ name: 'male_measurementId', referencedColumnName: 'id' })
   maleMeasurement?: MaleMeasurement;
 
-  @ManyToOne(() => Reference, (reference) => reference.maleDetails)
-  @JoinColumn({ name: 'references', referencedColumnName: 'id' })
+  @ManyToOne(() => Reference)
+  @JoinColumn({ name: 'referenceId', referencedColumnName: 'id' })
   reference?: Reference;
 
   maleMeasurementId?:string;

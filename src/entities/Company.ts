@@ -1,6 +1,6 @@
 import { Column, Entity, ManyToOne, JoinColumn } from 'typeorm';
 import { BaseModel } from './BaseModel.js';
-import { Region } from './enums.js';
+import { Region } from '../models/enums.js';
 import { User } from './User.js';
 
 @Entity('company')
@@ -18,6 +18,6 @@ export class Company extends BaseModel {
   logo?: string;
 
   @ManyToOne(() => User)
-  @JoinColumn({ name: 'users' })
+  @JoinColumn({ name: 'userId' })
   user?: User;
 }

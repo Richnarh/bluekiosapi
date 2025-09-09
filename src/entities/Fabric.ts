@@ -15,15 +15,15 @@ export class Fabric extends BaseModel {
   @Column({ name: 'completed_date', type: 'date', nullable: true })
   completedDate?: Date;
 
-  @ManyToOne(() => User, (user) => user.fabric)
-  @JoinColumn({ name: 'users', referencedColumnName: 'id' })
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'userId', referencedColumnName: 'id' })
   user?: User;
 
-  @ManyToOne(() => Customer, (customer) => customer.fabric)
-  @JoinColumn({ name: 'customers', referencedColumnName: 'id' })
+  @ManyToOne(() => Customer)
+  @JoinColumn({ name: 'customerId', referencedColumnName: 'id' })
   customer?: Customer;
 
-  @ManyToOne(() => Reference, (reference) => reference.fabric)
-  @JoinColumn({ name: 'references', referencedColumnName: 'id' })
+  @ManyToOne(() => Reference)
+  @JoinColumn({ name: 'referenceId', referencedColumnName: 'id' })
   reference?: Reference;
 }

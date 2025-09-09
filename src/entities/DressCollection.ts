@@ -5,9 +5,6 @@ import { Customer } from './Customer.js';
 
 @Entity('dress_collections')
 export class DressCollection extends BaseModel {
-// @Column({ name: 'customer_id', type: 'varchar', length: 255 })
-//   customerId: string;
-
   @Column({ type: 'int', name: 'amount' })
   amount?: number;
 
@@ -20,14 +17,11 @@ export class DressCollection extends BaseModel {
   @Column({ name: 'is_collected', type: 'boolean' })
   isCollected?: boolean;
 
-//   @Column({ name: 'user_id', type: 'varchar', length: 255 })
-//   userId: string;
-
-  @ManyToOne(() => User, (user) => user.dressCollection)
-  @JoinColumn({ name: 'users' })
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'userId' })
   user?: User;
 
-  @ManyToOne(() => Customer, (customer) => customer.dressCollection)
-  @JoinColumn({ name: 'customers' })
+  @ManyToOne(() => Customer)
+  @JoinColumn({ name: 'customerId' })
   customer?: Customer;
 }

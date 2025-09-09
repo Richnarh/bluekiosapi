@@ -1,8 +1,7 @@
-import { Column, Entity, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
+import { Column, Entity, ManyToOne, JoinColumn } from 'typeorm';
 import { BaseModel } from './BaseModel.js';
 import { User } from './User.js';
-import { MeasureType, PaymentMethod, PaymentStatus } from './enums.js';
-import { MaleDetails } from './MaleDetails.js';
+import { PaymentMethod, PaymentStatus } from '../models/enums.js';
 import { Customer } from './Customer.js';
 import { Reference } from './Reference.js';
 
@@ -29,15 +28,15 @@ export class PaymentInfo extends BaseModel {
   @Column({ type: 'text', nullable: true })
   description?: string;
 
-  @ManyToOne(() => User, (user) => user.payment)
-  @JoinColumn({ name: 'users', referencedColumnName: 'id'  })
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'userId', referencedColumnName: 'id'  })
   user?: User;
 
-  @ManyToOne(() => Customer, (customer) => customer.payment)
-  @JoinColumn({ name: 'customers', referencedColumnName: 'id' })
+  @ManyToOne(() => Customer)
+  @JoinColumn({ name: 'customerId', referencedColumnName: 'id' })
   customer?: Customer;
 
-  @ManyToOne(() => Reference, (reference) => reference.paymentInfo)
-  @JoinColumn({ name: 'references', referencedColumnName: 'id' })
+  @ManyToOne(() => Reference)
+  @JoinColumn({ name: 'referenceId', referencedColumnName: 'id' })
   reference?: Reference;
 }
