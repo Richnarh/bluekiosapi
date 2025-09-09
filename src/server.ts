@@ -34,14 +34,14 @@ const createApp = async (): Promise<express.Application> => {
   const app = express();
   const baseApi = '/api/v1'
   const corsOptions = {
-    origin: '*',
+    origin: 'http://localhost:4200',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id'],
   };
 
-  app.use(express.json());
   app.use(cookieParser());
+  app.use(express.json());
   app.use(express.urlencoded({ extended: true }))
   app.use(helmet());
   app.use(cors(corsOptions));

@@ -1,7 +1,7 @@
 import { Column, BaseEntity, CreateDateColumn, UpdateDateColumn, PrimaryColumn, BeforeInsert } from 'typeorm';
 import { ulid } from "ulid";
 
-export class BaseModel extends BaseEntity {
+export abstract class BaseModel extends BaseEntity {
   @PrimaryColumn('varchar', { length: 255, nullable: false  })
   id!: string;
 

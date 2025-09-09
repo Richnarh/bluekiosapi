@@ -52,7 +52,6 @@ export class AuthService{
         const accessToken = this.createAccessToken(newUser);
         const refreshToken = await this.createRefreshToken(newUser.id);
 
-
         return { accessToken, refreshToken, user: {...userWithoutPassword, company: newCompany} };
     }
     
@@ -175,7 +174,7 @@ export class AuthService{
     }
     const tokenRecord = await this.findRefreshToken(refreshToken,user);
     if (tokenRecord) {
-        await this.tokenRepository.remove(tokenRecord);
+        await this.tokenRepository.delete({ user: { id: userId } });
         logger.info('User logged out successfully', { userId: tokenRecord.user });
     } else {
         throw new AppError('Refresh token not found for logout', HttpStatus.NOT_FOUND);

@@ -78,7 +78,6 @@ export class ReferenceController{
             }
 
             const result = await this.referenceService.getReferencesByCustomer(customerId, userId);
-            console.log('result: ', result)
             res.status(HttpStatus.OK).json({
                 message: 'References and details fetched successfully',
                 count: result.length,

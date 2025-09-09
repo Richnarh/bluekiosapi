@@ -34,6 +34,9 @@ export class CustomerController{
 
     async getAllCustomers(req:Request, res:Response, next:NextFunction){
         try {
+            const refreshToken = req.cookies.refreshToken;
+            console.log('req.cookies: ', JSON.stringify(req.cookies));
+            console.log('refreshToken: ', refreshToken);
             const userId = req.headers['x-user-id']?.toString();
             const result = await this.customerRepository.find({ where: { user: {id: userId }} })
             res.status(HttpStatus.OK).json({

@@ -1,18 +1,14 @@
 import { logger } from '../utils/logger.js';
 import { DataSource } from 'typeorm';
-import * as dotenv from 'dotenv';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
+import isProduction from './envConfig.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const env = process.env.NODE_ENV || 'development';
-dotenv.config({ path: `.env.${env}` });
-
 export const initializeDatabase = async (): Promise<DataSource> => {
   try {
-    const isProduction = env === 'production';
 
     const AppDataSource = new DataSource({
       type: 'postgres',
@@ -33,7 +29,7 @@ export const initializeDatabase = async (): Promise<DataSource> => {
     });
 
     await AppDataSource.initialize();
-    logger.info(`Database connected in ${env} mode with connection pool`);
+    logger.info(`Database connected in ${isProduction ? 'Prod' : 'Dev'} mode with connection pool`);
     return AppDataSource;
   } catch (error) {
     logger.error('Database connection error:', error);

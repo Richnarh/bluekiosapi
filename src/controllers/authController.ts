@@ -1,16 +1,19 @@
 import { NextFunction, Request, Response} from 'express';
 import { DataSource, Repository } from 'typeorm';
+import { plainToInstance } from 'class-transformer';
+import { isEmpty } from 'lodash-es';
+
 import { AuthRequest } from '../middleware/authMiddleware.js';
 import { AuthService } from '../services/authService.js';
 import { HttpStatus } from '../utils/constants.js';
 import { AppError } from '../utils/errors.js';
 import { LoginRequest } from '../models/model.js'
 import { DefaultService } from '../services/DefaultService.js';
-import { isEmpty, validate } from 'class-validator';
+import { validate } from 'class-validator';
 import { logger } from '../utils/logger.js';
 import { User } from '../entities/User.js';
 import { UserValidator } from '../utils/validators.js';
-import { plainToInstance } from 'class-transformer';
+import { cookieConfig, setRefreshTokenCookie } from '../config/cookiesConfig.js';
 
 export class AuthController{
     private readonly userRepository: Repository<User>;
@@ -54,12 +57,7 @@ export class AuthController{
             const loginReq = { username: request.username, password: request.password };
             const { user, accessToken, refreshToken } = await this.authService.loginUser(loginReq);
 
-            res.cookie('refreshToken', refreshToken, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'strict',
-                maxAge: 7 * 24 * 60 * 60 * 1000
-            });
+            setRefreshTokenCookie(res, refreshToken);
             const company = await this.ds.getCompanyByUser(user.id);
             const { password, ...restUser } = user;
             const response = {  ...restUser, company };
@@ -89,7 +87,7 @@ export class AuthController{
 
     async logoutUser(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
         try {
-            const refreshToken = req.cookies.refreshToken;
+            const { refreshToken } = req.cookies;
             const { userId } = req.params;
             if (isEmpty(refreshToken)) {
                 throw new AppError(`Refresh token is required`, HttpStatus.BAD_REQUEST);
@@ -98,11 +96,7 @@ export class AuthController{
                 throw new AppError(`UserId is required`, HttpStatus.BAD_REQUEST);
             }
             await this.authService.logoutUser(refreshToken,userId);
-            res.clearCookie('refreshToken', {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'strict',
-            });
+            res.clearCookie('refreshToken', cookieConfig);
             res.status(HttpStatus.OK).json({ message: 'Logout successful' });
         } catch (error) {
             next(error);
