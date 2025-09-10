@@ -8,6 +8,7 @@ export const setupAuthRoutes = (dataSource: DataSource) => {
 
     router.post('/register', authController.registerUser.bind(authController));
     router.post('/login', authController.loginUser.bind(authController));
+    router.get('/checkusername/:username', authController.checkUsername.bind(authController));
     router.post('/logout/:userId', authController.logoutUser.bind(authController));
     router.post('/refresh', authController.refreshToken.bind(authController));
     router.post('/verify-otp', authController.verifyOtp.bind(authController));

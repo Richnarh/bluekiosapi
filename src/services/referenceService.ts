@@ -9,18 +9,22 @@ import { Customer } from "../entities/Customer.js";
 import { FemaleDetails } from "../entities/FemaleDetails.js";
 import { MaleDetails } from "../entities/MaleDetails.js";
 import { FormType } from "../models/model.js";
+import { setupFabricRoutes } from "../routes/fabricRoutes.js";
+import { Fabric } from "../entities/Fabric.js";
 
 export class ReferenceService{
     private readonly referenceRepository: Repository<Reference>;
     private readonly maleDetailsRepository: Repository<MaleDetails>;
     private readonly femaleDetailsRepository: Repository<FemaleDetails>;
     private readonly customerRepository:Repository<Customer>;
+    private readonly fabricRepository:Repository<Fabric>;
     private readonly ds:DefaultService;
         constructor(dataSource:DataSource){
             this.referenceRepository = dataSource.getRepository(Reference);
             this.customerRepository = dataSource.getRepository(Customer);
             this.maleDetailsRepository = dataSource.getRepository(MaleDetails);
             this.femaleDetailsRepository = dataSource.getRepository(FemaleDetails);
+            this.fabricRepository = dataSource.getRepository(Fabric);
             this.ds = new DefaultService(dataSource);
         }
 
@@ -90,13 +94,14 @@ export class ReferenceService{
                 loadEagerRelations: false,
             });
 
-            const data = references.map(reference => ({
-                id: reference.id,
-                refName: reference.refName,
-                fabric: reference.fabric
-                    ? { id: reference.fabric[0].id, fabricName: reference.fabric[0].fabricName }
-                    : null,
-            }));
+            const data = references.map(async reference => {
+                const fabric = await this.fabricRepository.findOne({where: { reference: { id: reference.id }}});
+                return {
+                    id: reference.id,
+                    refName: reference.refName,
+                    fabric: fabric ? { id: fabric.id, fabricName: fabric.fabricName } : null,
+                }
+            });
 
             return { count: references.length, data };
         } catch (error) {
@@ -107,15 +112,21 @@ export class ReferenceService{
         }
     }   
     async getReferencesByCustomer(customerId:string, userId:string){
-        return await this.referenceRepository.find({
+        const references = await this.referenceRepository.find({
             where: { 
                 customer: { id: customerId },
                 user: { id: userId } 
             },
             select: ['id', 'refName'],
-            relations: { fabric: true },
             relationLoadStrategy: 'query',
         });
+        const refs = references.map(async(ref) => {
+            const fabric = await this.fabricRepository.findOne({ where: 
+                { reference: { id: ref.id } }
+            });
+            return {...ref, fabric }
+        });
+        return Promise.all(refs);
     }
     async getReferencesByCustomer2(customerId: string, userId: string): Promise<{ count: number; data:any }> {
         try {
@@ -189,8 +200,7 @@ export class ReferenceService{
                     id,
                     user: { id: userId }
                 },
-                select: ['id', 'user', 'customer', 'refName', 'addedBy', 'fabric'],
-                relations: ['fabric'],
+                select: ['id', 'user', 'customer', 'refName', 'addedBy'],
                 relationLoadStrategy: 'query',
                 loadEagerRelations: false,
             });
@@ -198,13 +208,10 @@ export class ReferenceService{
             if (!reference) {
                 throw new AppError('Reference not found', HttpStatus.NOT_FOUND);
             }
-
-            return {
-                ...reference,
-                fabric: reference.fabric
-                    ? { id: reference.fabric[0].id, fabricName: reference.fabric[0].fabricName }
-                    : null,
-            };
+            const fabric = await this.fabricRepository.findOne({ where: 
+                { reference: { id: reference.id } }
+            });
+            return { ...reference, fabric:fabric ? { id: fabric.id, fabricName: fabric.fabricName } : null, };
         } catch (error) {
             logger.error('Failed to fetch reference by ID', { error, id, userId });
             throw error instanceof AppError

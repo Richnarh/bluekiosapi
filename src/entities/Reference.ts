@@ -1,8 +1,7 @@
-import { Column, Entity, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
+import { Column, Entity, ManyToOne, JoinColumn } from 'typeorm';
 import { BaseModel } from './BaseModel.js';
 import { User } from './User.js';
 import { Customer } from './Customer.js';
-import { Fabric } from './Fabric.js';
 
 @Entity('reference')
 export class Reference extends BaseModel {
@@ -16,7 +15,4 @@ export class Reference extends BaseModel {
   @ManyToOne(() => Customer)
   @JoinColumn({ name: 'customerId' })
   customer?: Customer;
-
-  @OneToMany(() => Fabric, (fabric) => fabric.reference)
-  fabric?: Fabric[];
 }

@@ -40,7 +40,7 @@ export class AuthController{
             }
             const { companyName, ...rest } = user;
             const result = await this.authService.save(rest as User, companyName);
-
+            setRefreshTokenCookie(res, result.refreshToken);
             res.status(HttpStatus.CREATED).json({
                 message: 'User added successfully',
                 data: result,
@@ -65,6 +65,20 @@ export class AuthController{
                 message: 'Login successful',
                 data: {accessToken,refreshToken, user:response } }
             );
+        } catch (error) {
+            logger.error(error);
+            next(error);
+        }
+    }
+
+    async checkUsername(req: Request, res:Response, next:NextFunction){
+        try {
+            const { username } = req.params;
+            if(isEmpty(username)){
+                throw new AppError('Username is required', HttpStatus.BAD_REQUEST);
+            }
+            const found = await this.userRepository.findOne({ where: { username }});
+            res.status(HttpStatus.OK).json({ data: found ? true : false })
         } catch (error) {
             logger.error(error);
             next(error);

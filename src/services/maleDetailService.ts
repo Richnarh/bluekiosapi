@@ -152,13 +152,6 @@ export class MaleDetailService{
 
     async fetchAllDetailsByCustomer(customerId: string, userId: string) {
         try {
-            if (!customerId) {
-                throw new AppError('Customer ID is required', HttpStatus.BAD_REQUEST);
-            }
-            if (!userId) {
-                throw new AppError('User ID is required', HttpStatus.BAD_REQUEST);
-            }
-
             const references = await this.referenceRepository.find({
                 where: {
                     customer: { id: customerId }, 

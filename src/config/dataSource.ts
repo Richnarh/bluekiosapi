@@ -18,7 +18,7 @@ export const initializeDatabase = async (): Promise<DataSource> => {
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
       entities: [path.join(__dirname, '..', 'entities', `*.${isProduction ? 'js' : 'ts'}`)],
-      synchronize: isProduction ? false : true,
+      synchronize: true,
       logging: isProduction ? ['error'] : false,
       extra: {
         max: isProduction ? 50 : 10,
