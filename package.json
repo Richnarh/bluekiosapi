@@ -24,6 +24,7 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
+    "@types/swagger-ui-dist": "^3.30.6",
     "axios": "^1.11.0",
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
@@ -45,6 +46,7 @@
     "reflect-metadata": "^0.2.2",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui": "^5.28.0",
+    "swagger-ui-dist": "^5.29.0",
     "swagger-ui-express": "^5.0.1",
     "typeorm": "^0.3.26",
     "ulid": "^3.0.1",

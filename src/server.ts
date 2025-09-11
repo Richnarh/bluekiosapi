@@ -10,7 +10,7 @@ import swaggerUi from 'swagger-ui-express';
 import { initializeDatabase } from './config/dataSource.js';
 import { logger } from './utils/logger.js';
 import { errorMiddleware } from './middleware/errorMiddleware.js';
-import swaggerSpec from './swagger.json' with { type: 'json' };
+import swaggerDocument from './swagger.json' with { type: 'json' };
 import { setupAuthRoutes } from './routes/authRoutes.js';
 import { setupUserRoutes } from './routes/userRoutes.js';
 import { setupClothImageRoutes } from './routes/clothRoutes.js';
@@ -45,7 +45,24 @@ const createApp = async (): Promise<express.Application> => {
   app.use(express.urlencoded({ extended: true }))
   app.use(helmet());
   app.use(cors(corsOptions));
-  app.use(`${baseApi}/docs`, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  app.use((req, res, next) => {
+    if (req.path === '/api/v1/api-docs' || req.path.startsWith('/api/v1/docs')) {
+      return next();
+    }
+    next();
+  });
+  app.use(`${baseApi}/docs`, express.static(path.join(__dirname, '..', 'node_modules', 'swagger-ui-dist')));
+  app.use(
+    `${baseApi}/api-docs`,
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerDocument, {
+      customCssUrl: `${baseApi}/docs/swagger-ui.css`,
+      customJs: [
+        `${baseApi}/docs/swagger-ui-bundle.js`,
+        `${baseApi}/docs/swagger-ui-standalone-preset.js`
+      ]
+    })
+  );
   app.use('/uploads/:company', async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { company } = req.params;
@@ -89,7 +106,7 @@ const createApp = async (): Promise<express.Application> => {
 };
 const startEngine = async () => {
   const app = await createApp();
-  const PORT = process.env.PORT || 3000;
+  const PORT = process.env.PORT || 3500;
   app.listen(PORT, () => {
     logger.info(`Server running on port ${PORT}`);
     logger.info(`Swagger UI available at http://localhost:${PORT}/api/v1/docs`)
