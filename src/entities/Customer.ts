@@ -10,7 +10,7 @@ export class Customer extends BaseModel {
   @Column({ name: 'phone_number', type: 'varchar', length: 100, unique: true })
   phoneNumber?: string;
 
-  @Column({ type: 'varchar', length: 100 })
+  @Column({ type: 'varchar', length: 100, nullable:true })
   address?: string;
 
   @ManyToOne(() => User)

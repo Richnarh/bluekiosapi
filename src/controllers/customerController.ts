@@ -45,6 +45,16 @@ export class CustomerController{
         }
     }
 
+    async checkPhoneExist(req:Request, res:Response, next:NextFunction){
+        try {
+            const { phoneNumber } = req.params;
+            const found = await this.customerRepository.findOne({ where: { phoneNumber } });
+            res.status(HttpStatus.OK).json({ data: found ? true : false })
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async getCustomerById(req:Request, res:Response, next:NextFunction){
         try {
             const { id } = req.params;
@@ -68,7 +78,7 @@ export class CustomerController{
             const deletes = await this.customerRepository.delete({ id });
             res.status(HttpStatus.OK).json({ data: deletes, message: 'Customer deleted successfully'});
         } catch (error) {
-            console.log(error)
+            console.log(error);
             next(error);
         }
     }
