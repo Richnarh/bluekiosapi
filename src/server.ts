@@ -23,7 +23,7 @@ import { setupFemaleDetailsRoutes } from './routes/femaleDetailRoutes.js';
 import { setupPaymentInfoRoutes } from './routes/payment.routes.js';
 import { setupReferenceRoutes } from './routes/referenceRoutes.js';
 import { IsUniqueConstraint } from './utils/validators.js';
-import { authMiddleware } from './middleware/authMiddleware.js';
+import { authMiddleware, AuthRequest } from './middleware/authMiddleware.js';
 
 const createApp = async (): Promise<express.Application> => {
   const dataSource: DataSource = await initializeDatabase();
@@ -77,10 +77,26 @@ const createApp = async (): Promise<express.Application> => {
     }
   });
 
-  app.use((req, res, next) => {
+  app.use((req: Request, res: Response, next: NextFunction) => {
     logger.info(`${req.method} ${req.url}`);
-    next();
-  });
+    const publicRoutes = [
+      '/api/v1/auth/login', 
+      '/api/v1/auth/register',
+      /^\/api\/v1\/auth\/checkusername\/[^/]+$/
+    ]
+    const isPublicRoute = publicRoutes.some(route => {
+      if (typeof route === 'string') {
+        return route === req.path;
+      } else {
+        return route.test(req.path);
+      }
+    });
+  
+    if (isPublicRoute) {
+      return next();
+    }
+    return authMiddleware(req, res, next);
+  })
 
   const routeConfigs = {
     'auth': () => setupAuthRoutes(dataSource),
@@ -99,7 +115,6 @@ const createApp = async (): Promise<express.Application> => {
   Object.entries(routeConfigs).forEach(([path, setup]) => {
     app.use(`${baseApi}/${path}`, setup());
   });
-  app.use(authMiddleware);
   app.use(errorMiddleware);
   IsUniqueConstraint.initialize(dataSource);
   return app;

@@ -8,23 +8,6 @@ export interface AuthRequest extends Request {
 }
 
 export function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
-  const publicRoutes = [
-    '/api/v1/auth/login', 
-    '/api/v1/auth/register',
-    '/api/v1/auth/refresh',
-    /^\/api\/v1\/auth\/checkusername\/[^/]+$/
-  ]
-  const isPublicRoute = publicRoutes.some(route => {
-    if (typeof route === 'string') {
-      return route === req.path;
-    } else {
-      return route.test(req.path);
-    }
-  });
-
-  if (isPublicRoute) {
-    return next();
-  }
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
