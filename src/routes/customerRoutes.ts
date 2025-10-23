@@ -9,7 +9,7 @@ export const setupCustomerRoutes = (datasource:DataSource) => {
     router.post('/', customerController.create.bind(customerController));
     router.put('/',customerController.create.bind(customerController));
     router.get('/',customerController.getAllCustomers.bind(customerController));
-    router.get('/phone/:phoneNumber',customerController.checkPhoneExist.bind(customerController));
+    router.get('/phone/:phoneNumber', customerController.checkPhoneExist.bind(customerController));
     router.get('/:id',customerController.getCustomerById.bind(customerController));
     router.delete('/:id', customerController.deleteImages.bind(customerController));
     return router;

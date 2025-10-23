@@ -2,10 +2,6 @@ import { NextFunction, Request, Response} from 'express';
 import { DataSource } from 'typeorm';
 import { AppError } from '../utils/errors.js';
 import { HttpStatus } from '../utils/constants.js';
-import { logger } from '../utils/logger.js';
-import { plainToInstance } from 'class-transformer';
-import { validate } from 'class-validator';
-import { UserValidator } from '../utils/validators.js';
 import { UserService } from '../services/userService.js';
 import { User } from '../entities/User.js';
 

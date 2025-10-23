@@ -7,7 +7,7 @@ export class Customer extends BaseModel {
   @Column({ name: 'full_name', type: 'varchar', length: 255 })
   fullName?: string;
 
-  @Column({ name: 'phone_number', type: 'varchar', length: 100, unique: true })
+  @Column({ name: 'phone_number', type: 'varchar', length: 100 })
   phoneNumber?: string;
 
   @Column({ type: 'varchar', length: 100, nullable:true })

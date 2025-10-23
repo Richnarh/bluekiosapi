@@ -47,9 +47,20 @@ export class CustomerController{
 
     async checkPhoneExist(req:Request, res:Response, next:NextFunction){
         try {
+            const userId = req.headers['x-user-id']?.toString();
             const { phoneNumber } = req.params;
-            const found = await this.customerRepository.findOne({ where: { phoneNumber } });
-            res.status(HttpStatus.OK).json({ data: found ? true : false })
+            if (!userId || !phoneNumber) {
+                res.status(HttpStatus.BAD_REQUEST).json({
+                    message: "userId or phoneNumber missing"
+                });
+            }
+            const found = await this.customerRepository.findOne({ 
+                where: { 
+                    phoneNumber, 
+                    user: { id: userId } 
+                } 
+            });
+            res.status(HttpStatus.OK).json({ data: !!found })
         } catch (error) {
             next(error);
         }

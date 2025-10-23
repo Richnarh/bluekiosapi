@@ -17,4 +17,10 @@ export class MaleMeasurement extends BaseModel {
   @ManyToOne(() => User)
   @JoinColumn({ name: 'userId' })
   user?: User;
+
+  @Column({ name: 'description', type: 'text', nullable: true })
+  description?: string;
+
+  @Column({ name: 'how_to_use', type: 'text', nullable: true })
+  howToUse?: string;
 }

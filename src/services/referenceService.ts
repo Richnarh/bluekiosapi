@@ -9,7 +9,6 @@ import { Customer } from "../entities/Customer.js";
 import { FemaleDetails } from "../entities/FemaleDetails.js";
 import { MaleDetails } from "../entities/MaleDetails.js";
 import { FormType } from "../models/model.js";
-import { setupFabricRoutes } from "../routes/fabricRoutes.js";
 import { Fabric } from "../entities/Fabric.js";
 
 export class ReferenceService{

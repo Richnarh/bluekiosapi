@@ -23,7 +23,9 @@ import { setupFemaleDetailsRoutes } from './routes/femaleDetailRoutes.js';
 import { setupPaymentInfoRoutes } from './routes/payment.routes.js';
 import { setupReferenceRoutes } from './routes/referenceRoutes.js';
 import { IsUniqueConstraint } from './utils/validators.js';
-import { authMiddleware, AuthRequest } from './middleware/authMiddleware.js';
+import { authMiddleware } from './middleware/authMiddleware.js';
+
+const baseApi = `/api/v1`;
 
 const createApp = async (): Promise<express.Application> => {
   const dataSource: DataSource = await initializeDatabase();
@@ -32,9 +34,22 @@ const createApp = async (): Promise<express.Application> => {
   const __dirname = path.dirname(__filename);
 
   const app = express();
-  const baseApi = '/api/v1'
-  const corsOptions = {
-    origin: 'http://localhost:4200',
+
+  const allowedOrigins = [
+    'http://localhost:4200',           
+    'https://bluekios.netlify.app',    
+    'https://194.163.144.61'
+  ];
+
+  const corsOptions: cors.CorsOptions = {
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS blocked for origin: ${origin}`));
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id'],
@@ -63,7 +78,7 @@ const createApp = async (): Promise<express.Application> => {
       ]
     })
   );
-  app.use('/uploads/:company', async (req: Request, res: Response, next: NextFunction) => {
+  app.use(`/uploads/:company`, async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { company } = req.params;
       const sanitizedCompany = company.replace(/\s/g, '');
@@ -80,9 +95,9 @@ const createApp = async (): Promise<express.Application> => {
   app.use((req: Request, res: Response, next: NextFunction) => {
     logger.info(`${req.method} ${req.url}`);
     const publicRoutes = [
-      '/api/v1/auth/login', 
-      '/api/v1/auth/register',
-      /^\/api\/v1\/auth\/checkusername\/[^/]+$/
+      `${baseApi}/auth/login`, 
+      `${baseApi}/auth/register`,
+      new RegExp(`^${baseApi}/auth/checkusername/[^/]+$`)
     ]
     const isPublicRoute = publicRoutes.some(route => {
       if (typeof route === 'string') {
@@ -124,7 +139,7 @@ const startEngine = async () => {
   const PORT = process.env.PORT || 3500;
   app.listen(PORT, () => {
     logger.info(`Server running on port ${PORT}`);
-    logger.info(`Swagger UI available at http://localhost:${PORT}/api/v1/docs`)
+    logger.info(`Swagger UI available at http://localhost:${PORT}${baseApi}/docs`)
   });
 }
 
