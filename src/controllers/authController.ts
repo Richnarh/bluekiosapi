@@ -86,13 +86,18 @@ export class AuthController{
     }
 
     async refreshToken(req: Request, res: Response, next: NextFunction) {
-        try {
+    try {
         const token = req.cookies.refreshToken;
+        const { userId } = req.params;
+        if(!userId){
+            throw new AppError('UserId is required', HttpStatus.BAD_REQUEST);
+        }
         if(!token){
             throw new AppError('No refresh token provided', HttpStatus.UNAUTHORIZED);
         }
-        const { accessToken, refreshToken } = await this.authService.refreshAccessToken(token);
-        res.status(HttpStatus.OK).json({ message: 'Token refreshed successfully', accessToken, refreshToken});
+            const { accessToken, refreshToken } = await this.authService.refreshAccessToken(token,userId);
+            setRefreshTokenCookie(res, refreshToken);
+            res.status(HttpStatus.OK).json({ message: 'Token refreshed successfully', data: { accessToken, refreshToken }});
         } catch (error) {
             logger.error(error);
             next(error);

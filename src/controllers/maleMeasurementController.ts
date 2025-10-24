@@ -24,7 +24,7 @@ export class MeasurementController{
             }
             const user = await this.ds.getUserById(male.userId);
             male.user = user;
-            const load = { ...male, measureType: MeasureType.DEFAULT_TYPE } // change the default to custom
+            const load = { ...male, measureType: MeasureType.CUSTOM }
             const payload = this.maleMeasurementRepository.create(load);
             const result = await this.maleMeasurementRepository.save(payload);
             res.status(HttpStatus.CREATED).json({

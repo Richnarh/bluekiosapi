@@ -97,7 +97,7 @@ const createApp = async (): Promise<express.Application> => {
     const publicRoutes = [
       `${baseApi}/auth/login`, 
       `${baseApi}/auth/register`,
-      `${baseApi}/auth/refresh`,
+      new RegExp(`^${baseApi}/auth/refresh/[^/]+$`),
       new RegExp(`^${baseApi}/auth/checkusername/[^/]+$`)
     ]
     const isPublicRoute = publicRoutes.some(route => {

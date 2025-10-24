@@ -25,7 +25,7 @@ export class femaleMeasurementController{
             }
             const user = await this.ds.getUserById(female.userId);
             female.user = user;
-            const load = { ...female, measureType: MeasureType.DEFAULT_TYPE };
+            const load = { ...female, measureType: MeasureType.CUSTOM };
             const payload = this.femaleMeasurementRepository.create(load);
             const result = await this.femaleMeasurementRepository.save(payload);
             res.status(HttpStatus.CREATED).json({

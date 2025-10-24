@@ -95,8 +95,8 @@ export class AuthService{
       return accessToken;
     }
   
-  async refreshAccessToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
-      const tokens = await this.verifyRefreshToken(refreshToken);
+  async refreshAccessToken(refreshToken: string, userId:string): Promise<{ accessToken: string; refreshToken: string }> {
+      const tokens = await this.verifyRefreshToken(refreshToken, userId);
       const user = await this.userRepository.findOneBy({ id: tokens.user?.id });
       if (!user) {
         throw new AppError('Invalid refresh token', HttpStatus.BAD_REQUEST);
@@ -132,7 +132,7 @@ export class AuthService{
     }
   }
 
-  async verifyRefreshToken(token: string): Promise<RefreshToken> {
+  async verifyRefreshToken2(token: string): Promise<RefreshToken> {
     const tokenRecord = await this.tokenRepository
     .createQueryBuilder('refreshToken')
     .where('refreshToken.expiresAt >= :currentDate', { currentDate: new Date() })
@@ -148,6 +148,29 @@ export class AuthService{
     logger.info('Refresh token verified successfully', { userId: tokenRecord.user });
     return tokenRecord;
   }
+
+  async verifyRefreshToken(token: string, userId: string): Promise<RefreshToken> {
+    const tokenRecord = await this.tokenRepository.findOne({
+      where: { user: { id: userId } },
+    });
+
+    if (!tokenRecord) {
+      throw new AppError('Invalid refresh token', HttpStatus.UNAUTHORIZED);
+    }
+
+    const isMatch = bcrypt.compare(token, tokenRecord.token!);
+    if (!isMatch) {
+      throw new AppError('Invalid refresh token', HttpStatus.UNAUTHORIZED);
+    }
+
+    if (tokenRecord.expiresAt! < new Date()) {
+      await this.tokenRepository.remove(tokenRecord);
+      throw new AppError('Expired refresh token', HttpStatus.UNAUTHORIZED);
+    }
+
+    return tokenRecord;
+  }
+
 
   async findRefreshToken(token: string, user: User): Promise<RefreshToken | null> {
     const tokenRecord = await this.tokenRepository

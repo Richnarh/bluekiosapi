@@ -10,7 +10,7 @@ export class RefreshToken extends BaseModel {
   @Column({ name: 'expires_at', type: 'date' })
   expiresAt?: Date;
 
-  @OneToOne(() => User, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
   user?: User;
 } 
