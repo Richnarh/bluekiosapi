@@ -1,0 +1,43 @@
+name: 🚀 Deploy BlueKios API
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ✅ Checkout source code
+        uses: actions/checkout@v3
+
+      - name: 🧰 Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: 📦 Install dependencies
+        run: npm install --production=false
+
+      - name: 🏗️ Build project
+        run: npm run build
+
+      - name: 🔐 Setup SSH
+        run: |
+          eval "$(ssh-agent -s)"
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' | ssh-add -
+          mkdir -p ~/.ssh
+          echo -e "Host *\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+
+      - name: 📤 Upload build to VPS
+        run: |
+          rsync -avz --delete \
+          ./dist/ \
+          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:${{ secrets.SERVER_PATH }}/dist/
+
+      - name: 🔄 Restart PM2 App
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
+          "pm2 restart ${{ secrets.PM2_APP_NAME }} && pm2 save"
