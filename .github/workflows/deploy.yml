@@ -10,39 +10,38 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: ✅ Checkout source code
+      - name: ✅ Checkout repo
         uses: actions/checkout@v3
 
       - name: 🧰 Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: 📦 Install dependencies
         run: npm install --production=false
 
-      - name: 🏗️ Build project
-        run: npm run build
+      - name: 🏗️ Build project (TypeScript)
+        run: |
+          if [ -f tsconfig.json ]; then
+            npm run build
+          fi
 
       - name: 🔐 Setup SSH
         run: |
           eval "$(ssh-agent -s)"
+          ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-add ~/.ssh/id_ed25519
           ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+        shell: bash
 
-      - name: 🧪 Validate SSH key
-        run: ssh-add -l
-
-      - name: 📤 Upload build to VPS
+      - name: 📤 Deploy backend to VPS
         run: |
           rsync -avz --delete \
-            ./dist/ \
-            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/var/www/bluekios/dist/
+          ./dist/ \
+          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:${{ secrets.SERVER_PATH }}/
 
-      - name: 🔄 Restart PM2 App
+      - name: 🔄 Restart PM2 backend
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
-            "cd /var/www/bluekios && pm2 restart bluekios && pm2 save"
+          "pm2 restart bluekios || pm2 start /var/www/bluekios/dist/server.js --name bluekios && pm2 save"
