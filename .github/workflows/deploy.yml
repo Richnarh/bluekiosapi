@@ -27,17 +27,22 @@ jobs:
       - name: 🔐 Setup SSH
         run: |
           eval "$(ssh-agent -s)"
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' | ssh-add -
           mkdir -p ~/.ssh
-          echo -e "Host *\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-add ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: 🧪 Validate SSH key
+        run: ssh-add -l
 
       - name: 📤 Upload build to VPS
         run: |
           rsync -avz --delete \
-          ./dist/ \
-          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:${{ secrets.SERVER_PATH }}/dist/
+            ./dist/ \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:${{ secrets.SERVER_PATH }}/dist/
 
       - name: 🔄 Restart PM2 App
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
-          "pm2 restart ${{ secrets.PM2_APP_NAME }} && pm2 save"
+            "pm2 restart ${{ secrets.PM2_APP_NAME }} && pm2 save"
