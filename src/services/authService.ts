@@ -88,9 +88,9 @@ export class AuthService{
       }
       let accessToken:string | null;
       if(!isEmpty(user.emailAddress)){
-        accessToken = jwt.sign({ id: user.id, emailAddress: user.emailAddress }, process.env.JWT_SECRET, { expiresIn: '5h' });
+        accessToken = jwt.sign({ id: user.id, emailAddress: user.emailAddress }, process.env.JWT_SECRET, { expiresIn: '1m' });
       }else{
-        accessToken = jwt.sign({ id: user.id, phoneNumber: user.phoneNumber }, process.env.JWT_SECRET, { expiresIn: '5h' });
+        accessToken = jwt.sign({ id: user.id, phoneNumber: user.phoneNumber }, process.env.JWT_SECRET, { expiresIn: '1m' });
       }
       return accessToken;
     }
@@ -102,7 +102,7 @@ export class AuthService{
         throw new AppError('Invalid refresh token', HttpStatus.BAD_REQUEST);
       }
       await this.tokenRepository.remove(tokens);
-      const accessToken = jwt.sign({ id: user.id, emailAddress: user.emailAddress }, process.env.JWT_SECRET!, { expiresIn: '5h'});
+      const accessToken = jwt.sign({ id: user.id, emailAddress: user.emailAddress }, process.env.JWT_SECRET!, { expiresIn: '7d'});
       const token = await this.createRefreshToken(user.id!);
       logger.info('Access token refreshed successfully', { userId: user.id });
       return { accessToken, refreshToken: token! };
