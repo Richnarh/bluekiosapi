@@ -90,7 +90,7 @@ export class AuthService{
       if(!isEmpty(user.emailAddress)){
         accessToken = jwt.sign({ id: user.id, emailAddress: user.emailAddress }, process.env.JWT_SECRET, { expiresIn: '1m' });
       }else{
-        accessToken = jwt.sign({ id: user.id, phoneNumber: user.phoneNumber }, process.env.JWT_SECRET, { expiresIn: '1m' }); //temporal
+        accessToken = jwt.sign({ id: user.id, phoneNumber: user.phoneNumber }, process.env.JWT_SECRET, { expiresIn: '1m' });
       }
       return accessToken;
     }
