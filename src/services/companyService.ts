@@ -1,4 +1,4 @@
-import { RemoveOptions, Repository, SaveOptions } from "typeorm";
+import { Repository } from "typeorm";
 import { promises as fs } from 'fs';
 import { Company } from "../entities/Company.js";
 import { User } from "../entities/User.js";

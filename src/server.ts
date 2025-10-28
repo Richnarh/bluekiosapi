@@ -24,6 +24,8 @@ import { setupPaymentInfoRoutes } from './routes/payment.routes.js';
 import { setupReferenceRoutes } from './routes/referenceRoutes.js';
 import { IsUniqueConstraint } from './utils/validators.js';
 import { authMiddleware } from './middleware/authMiddleware.js';
+import { setupFormsRoutes } from './routes/formRoutes.js';
+import './jobs/formCleanup.js';
 
 const baseApi = `/api/v1`;
 
@@ -98,6 +100,7 @@ const createApp = async (): Promise<express.Application> => {
       `${baseApi}/auth/login`, 
       `${baseApi}/auth/register`,
       new RegExp(`^${baseApi}/auth/refresh/[^/]+$`),
+      new RegExp(`^${baseApi}/forms/s/[^/]+$`),
       new RegExp(`^${baseApi}/auth/checkusername/[^/]+$`)
     ]
     const isPublicRoute = publicRoutes.some(route => {
@@ -126,6 +129,7 @@ const createApp = async (): Promise<express.Application> => {
     'female-details': () => setupFemaleDetailsRoutes(dataSource),
     'payments-info': () => setupPaymentInfoRoutes(dataSource),
     'references': () => setupReferenceRoutes(dataSource),
+    'forms': () => setupFormsRoutes(dataSource),
   };
 
   Object.entries(routeConfigs).forEach(([path, setup]) => {

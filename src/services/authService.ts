@@ -88,9 +88,9 @@ export class AuthService{
       }
       let accessToken:string | null;
       if(!isEmpty(user.emailAddress)){
-        accessToken = jwt.sign({ id: user.id, emailAddress: user.emailAddress }, process.env.JWT_SECRET, { expiresIn: '1m' });
+        accessToken = jwt.sign({ id: user.id, emailAddress: user.emailAddress }, process.env.JWT_SECRET, { expiresIn: '7h' });
       }else{
-        accessToken = jwt.sign({ id: user.id, phoneNumber: user.phoneNumber }, process.env.JWT_SECRET, { expiresIn: '1m' });
+        accessToken = jwt.sign({ id: user.id, phoneNumber: user.phoneNumber }, process.env.JWT_SECRET, { expiresIn: '7h' });
       }
       return accessToken;
     }

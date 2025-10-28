@@ -8,7 +8,6 @@ import { AppError } from "../utils/errors.js";
 import { logger } from "../utils/logger.js";
 import { ClothImageService } from '../services/clothImageService.js';
 import { ClothImage } from '../entities/ClothImage.js';
-import { DefaultService } from '../services/DefaultService.js';
 
 export class ClothController{
     private readonly clothImageService: ClothImageService;

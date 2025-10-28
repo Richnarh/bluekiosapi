@@ -20,4 +20,7 @@ export class User extends BaseModel {
 
   @Column({ type: 'varchar', length: 100, unique: true, nullable: true })
   username?: string;
+
+  @Column({ name: 'user_code', type: 'varchar', length: 100, unique: true, nullable: true })
+  userCode?: string;
 }

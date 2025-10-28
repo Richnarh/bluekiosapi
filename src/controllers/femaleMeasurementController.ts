@@ -41,7 +41,6 @@ export class femaleMeasurementController{
     async getFemaleMeasurements(req: Request, res: Response, next: NextFunction) {
         try {
             const measurement = await this.femaleMeasurementRepository.find();
-            console.log('measurement: ', measurement)
             res.status(HttpStatus.OK).json({
                 message: 'Records found!.',
                 data: measurement
