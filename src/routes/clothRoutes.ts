@@ -2,7 +2,7 @@ import { ClothController } from '../controllers/clothController.js';
 import express, { Request } from 'express';
 import multer from 'multer';
 import fs from 'fs';
-import { DefaultService, DefaultService as ds } from '../services/DefaultService.js';
+import { DefaultService } from '../services/DefaultService.js';
 import { AppError } from '../utils/errors.js';
 import { HttpStatus } from '../utils/constants.js';
 import { DataSource } from 'typeorm';
@@ -15,8 +15,7 @@ export const setupClothImageRoutes = (dataSource: DataSource) => {
 
 const storage = multer.diskStorage({
    destination: async (req:Request, file, cb) => {
-
-                const userId = req.headers['x-user-id']?.toString();
+    const userId = req.headers['x-user-id']?.toString();
     if(!userId){
         throw new AppError('UserId is required in headers', HttpStatus.BAD_REQUEST);
     }
@@ -52,6 +51,7 @@ const upload = multer({
 
   router.post('/', upload.single('file'), controller.create.bind(controller));
   router.put('/', upload.single('file'), controller.create.bind(controller));
+  router.post('/files', upload.single('file'), controller.create.bind(controller));
   router.get('/:customerId/:referenceId', controller.getImage.bind(controller));
   router.delete('/:id', controller.delete.bind(controller));
 

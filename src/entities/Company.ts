@@ -11,6 +11,9 @@ export class Company extends BaseModel {
   @Column({ name: 'address', type: 'varchar', length: 255, nullable: true })
   address?: string;
 
+  @Column({ name: 'quote', type: 'varchar', length: 255, nullable: true })
+  quote?: string;
+
   @Column({ type: 'enum', enum: Region, name: 'region', nullable: true })
   region?: Region;
 

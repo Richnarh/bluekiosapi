@@ -20,7 +20,7 @@ export class ClothController{
     async create(req: Request, res: Response, next: NextFunction) {
         try {
             const { id, customerId, referenceId } = req.body;
-                        const userId = req.headers['x-user-id']?.toString();
+            const userId = req.headers['x-user-id']?.toString();
 
             if (!userId) {
                 throw new AppError('UserId is required in headers', HttpStatus.BAD_REQUEST);

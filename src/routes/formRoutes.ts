@@ -8,6 +8,8 @@ export const setupFormsRoutes = (dataSource: DataSource) => {
     
     router.post('/', controller.save.bind(controller));
     router.put('/', controller.save.bind(controller));
+    router.get('/:id', controller.findById.bind(controller));
+    router.post('/user-form', controller.saveForm.bind(controller));
     router.get('/s/:id', controller.getUrl.bind(controller));
     return router;
 };

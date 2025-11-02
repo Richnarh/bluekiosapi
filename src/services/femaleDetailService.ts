@@ -107,7 +107,7 @@ export class FemaleDetailService{
             if (updatedCount === 0) {
                 throw new AppError('No details updated', HttpStatus.NOT_FOUND);
             }
-            return { count: updatedCount };
+            return { count: updatedCount, referenceId: details[0]?.referenceId  };
         } else {
             throw new AppError('Invalid method. Use POST or PUT', HttpStatus.BAD_REQUEST);
         }

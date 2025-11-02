@@ -15,7 +15,7 @@ export class MaleDetailController {
         try {
             const details = req.body;
             const { customerId } = req.params;
-                        const userId = req.headers['x-user-id']?.toString();
+            const userId = req.headers['x-user-id']?.toString();
             if (!userId) {
                 throw new AppError('UserId is required in headers', HttpStatus.BAD_REQUEST);
             }

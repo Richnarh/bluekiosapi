@@ -94,28 +94,31 @@ const createApp = async (): Promise<express.Application> => {
     }
   });
 
-  app.use((req: Request, res: Response, next: NextFunction) => {
-    logger.info(`${req.method} ${req.url}`);
-    const publicRoutes = [
-      `${baseApi}/auth/login`, 
-      `${baseApi}/auth/register`,
-      new RegExp(`^${baseApi}/auth/refresh/[^/]+$`),
-      new RegExp(`^${baseApi}/forms/s/[^/]+$`),
-      new RegExp(`^${baseApi}/auth/checkusername/[^/]+$`)
-    ]
-    const isPublicRoute = publicRoutes.some(route => {
-      if (typeof route === 'string') {
-        return route === req.path;
-      } else {
-        return route.test(req.path);
-      }
-    });
-  
-    if (isPublicRoute) {
-      return next();
-    }
-    return authMiddleware(req, res, next);
-  })
+app.use((req: Request, res: Response, next: NextFunction) => {
+  logger.info(`${req.method} ${req.url}`);
+
+  const publicRoutes = [
+    `${baseApi}/auth/login`,
+    `${baseApi}/auth/register`,
+    `${baseApi}/male-measurements/active`,
+    `${baseApi}/female-measurements/active`,
+    `${baseApi}/cloth-images/files`,
+  ];
+
+  const publicRegexRoutes = [
+    new RegExp(`^${baseApi}/auth/refresh/[^/]+$`),
+    new RegExp(`^${baseApi}/forms(/.*)?$`),
+    new RegExp(`^${baseApi}/auth/checkusername/[^/]+$`),
+  ];
+
+  const isPublicRoute = publicRoutes.includes(req.path) || publicRegexRoutes.some((route) => route.test(req.path));
+  if (isPublicRoute) {
+    return next();
+  }
+
+  return authMiddleware(req, res, next);
+});
+
 
   const routeConfigs = {
     'auth': () => setupAuthRoutes(dataSource),

@@ -7,8 +7,6 @@ import { DefaultService } from './DefaultService.js';
 import { AppError } from '../utils/errors.js';
 import { HttpStatus } from '../utils/constants.js';
 import { logger } from '../utils/logger.js';
-import { Customer } from '../entities/Customer.js';
-import { Reference } from '../entities/Reference.js';
 
 export class ClothImageService{
     private readonly clothImageRepository:Repository<ClothImage>;
