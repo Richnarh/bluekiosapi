@@ -8,6 +8,9 @@ export class Settings extends BaseModel{
     @Column({ name: 'form_note', type: 'text', nullable: true })
     formNote?:string;
 
+    @Column({ name: 'footer_note', type: 'varchar', length: 150, nullable: true })
+    footerNote?:string;
+
     @ManyToOne(() => User)
     @JoinColumn({ name: 'userId' })
     user?: User;

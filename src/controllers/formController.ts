@@ -128,7 +128,13 @@ export class FormController{
         const form = await this.formRepository.findOne({ where: { id }, relations:['user']});
         const company = await this.companyRepository.findOne({ where: { user: { id: form?.user?.id }}});
         const settings = await this.settingRepository.findOne({ where: { user: { id: form?.user?.id }}});
-        res.status(HttpStatus.OK).json({ data: { userId: form?.user?.id, company, settings }});
+        res.status(HttpStatus.OK).json({ data: { 
+            userId: form?.user?.id, 
+            phoneNumber: form?.user?.phoneNumber, 
+            emailAddress: form?.user?.emailAddress, 
+            company, 
+            settings 
+        }});
     } catch (error) {
         next(error);
     }
