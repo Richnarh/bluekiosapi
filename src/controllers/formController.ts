@@ -70,10 +70,10 @@ export class FormController{
       const hashedToken = this.hashToken(token);
       const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30d
 
-      const fullUrl = `https://bluekios.netlify.app/forms?id=${id}&token=${token}`;
+      const fullUrl = `https://app.bluekios.com/forms?id=${id}&token=${token}`;
 
       const shortId = Math.random().toString(36).substring(2, 8);
-      const shortUrl = `https://bluekios.netlify.app/forms/s/${shortId}`;
+      const shortUrl = `https://app.bluekios.com/forms/s/${shortId}`;
 
       const form = new Form();
       form.id = id;
